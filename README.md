@@ -1,5 +1,7 @@
 # KUB Council Report — GLM 🗳️
 
+⚡ **Power by VeeNagi** (ผู้พัฒนา)
+
 Dashboard เกาะติด **ผลโหวตจริงจากบล็อกเชน** ของ **KUB Community Council Election Round 2**
 บน KUB Chain Mainnet (Chain ID **96**) — read-only 100% ไม่ผูกกระเป๋าเงิน ไม่มี API key
 
@@ -124,7 +126,7 @@ netlify deploy --build --prod
 
 ## ข้อจำกัด / คำชี้แจง
 
-- เว็บนี้ **ไม่ใช่ทรัพย์สินทางการ** ของ KUB / Bitkub Chain — เป็นเครื่องมือรายงานแบบ public interest
+- เว็บนี้ **ไม่ใช่ทรัพย์สินทางการ** ของ KUB / Kub Chain — เป็นเครื่องมือรายงานแบบ public interest
 - ข้อมูลมาจากบล็อกเชนสาธารณะ 100% (read-only) — ธุรกรรมโหวตเปิดดูได้เองบน kubscan ทุกครั้งผ่านลิงก์
 - gKUB decimals = 18 (พิสูจน์โดยนัย: minQuorum `20e18` == "20" ใน API และคะแนนตรงเป๊ะทุกตัว)
 - API อย่างเป็นทางการอาจไม่ได้แสดง "ตัวเลข" แบบตรง timing เดียวกับการอ่านเชนเสมอ — ระบบจะแจ้ง

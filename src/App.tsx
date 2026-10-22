@@ -68,7 +68,7 @@ export default function App() {
         <TxFeed votes={feed} refunds={model.refunds} nameOf={nameOf} total={model.totalVoteCount} />
       </main>
 
-      <Footer model={model} />
+      <Footer />
     </div>
   );
 }

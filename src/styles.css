@@ -180,6 +180,13 @@ footer {
 footer ul { margin: 4px 0 0; padding-left: 18px; }
 footer li { margin-bottom: 3px; }
 footer .mono { color: #7ba98e; }
+.powered {
+  margin-top: 4px; padding: 11px 15px; text-align: center;
+  border: 1px solid rgba(47, 233, 122, 0.3); border-radius: 10px;
+  background: linear-gradient(180deg, rgba(47, 233, 122, 0.09), rgba(47, 233, 122, 0.03));
+  color: var(--text); font-size: 14px; letter-spacing: 0.4px;
+}
+.powered b { color: var(--accent); font-weight: 600; letter-spacing: 0.6px; }
 
 /* ---- responsive ---- */
 @media (max-width: 560px) {

@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "KUB Community Council Election Round 2 — live on-chain results dashboard (read-only, KUB Chain Mainnet)",
+  "author": "VeeNagi",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
