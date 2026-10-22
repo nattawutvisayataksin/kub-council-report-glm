@@ -1,5 +1,5 @@
 import { EXPLORER_URL, explorerAddrUrl, explorerTxUrl } from "../config/chain";
-import { GKUB_TOKEN, PROPOSAL_CONTRACT, VERIFIED_TOPIC0 } from "../config/election";
+import { GKUB_TOKEN, NAMES_VERIFIED_AT, PROPOSAL_CONTRACT, VERIFIED_TOPIC0 } from "../config/election";
 import type { ElectionModel } from "../lib/election";
 
 export function Footer({ model }: { model: ElectionModel }) {
@@ -30,7 +30,9 @@ export function Footer({ model }: { model: ElectionModel }) {
         <ul>
           <li>โหวตถูก "เผา" ผ่าน <code className="mono">gKUB.burn(user, amount)</code> — คะแนน additive จริง (withdraw ซอร์สยืนยันว่าไม่ลด choiceVoted)</li>
           <li>คะแนนแสดงเป็น gKUB ที่มี decimals = 18 (ยืนยันโดยตรงกับ minQuorum 20 gKUB และตัวเลข API ตรงเป๊ะ)</li>
-          <li>ชื่อผู้สมัครมาจาก /api/votes โดยตรวจสอบว่า index ของ choice บนเชน = index ของ options ใน API (numOfChoice + ตัวเลข per option เทียบแล้ว)</li>
+          <li>ชื่อผู้สมัคร: ดึงจาก /api/votes เมื่อเรียกได้ (CORS อนุญาต) — ในโดเมนที่ API ปิด CORS (เช่น github.io)
+            ใช้ชื่อที่ฝังไว้ใน <code className="mono">src/config/election.ts</code> เรียบร้อยแล้ว (ยืนยัน index กับเชน
+            ณ {NAMES_VERIFIED_AT}) — ตัวเลขคะแนนทุกตัวใช้จากเชนเท่านั้นเสมอ</li>
           <li>read-only ทั้งหมด — ไม่ผูก wallet ไม่มีการกระทำการใด ๆ บนเชน</li>
         </ul>
       </div>

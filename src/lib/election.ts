@@ -25,6 +25,7 @@ import {
   GKUB_TOKEN,
   PROPOSAL_CONTRACT,
   PROPOSAL_IDS,
+  VERIFIED_CANDIDATE_NAMES,
   proposalAbi,
   type ProposalId,
 } from "../config/election";
@@ -511,7 +512,8 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     const opts: OptionModel[] = [];
     for (let idx = 0; idx < optionVotes.length; idx++) {
       const apiOpt = ap?.options.find((o) => o.idx === idx);
-      const name = apiOpt?.name ?? `ตัวเลือก ${idx + 1}`;
+      const localName = VERIFIED_CANDIDATE_NAMES[id]?.[idx];
+      const name = apiOpt?.name ?? localName ?? `ตัวเลือก ${idx + 1}`;
       opts.push({
         idx,
         name,

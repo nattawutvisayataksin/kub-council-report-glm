@@ -89,14 +89,33 @@ npm run preview    # เสิร์ฟ dist/ ที่ build แล้ว
 | `VITE_RPC_URL` | `https://rpc.kubchain.io` | RPC ของ KUB Chain Mainnet |
 | `VITE_API_FALLBACK_URL` | `https://kubcouncil.vercel.app/api/votes` | API สำหรับ cross-check + ชื่อผู้สมัคร |
 
-## Deploy: GitHub + Netlify
+## Deploy: GitHub + GitHub Pages (แนะนำ — รันบนเว็บ GitHub โดยตรง)
 
-1. Push โปรเจกต์นี้ขึ้น GitHub (repo ใหม่ public หรือ private ก็ได้)
-2. บน [Netlify](https://app.netlify.com) เลือก **Add site → Import from Git → เลือก repo**
-3. Build command และ publish dir ดึงจากไฟล์ `netlify.toml` อัตโนมัติ:
+1. push โปรเจกต์นี้ขึ้น GitHub (repo ใหม่ public — ชื่อแนะนำ `kub-council-report-glm`) เช่น
+```bash
+git init
+git add -A
+git commit -m "KUB Council Report GLM v1.0"
+# สร้าง repo เปล่า (ไม่ต้อง init README) บน github.com แล้ว:
+git remote add origin https://github.com/<USER>/kub-council-report-glm.git
+git push -u origin main
+```
+2. เปิด **Settings → Pages → Source = "GitHub Actions"** (ทำครั้งเดียว)
+3. ทุก push บน main workflow `.github/workflows/deploy.yml` จะ build + deploy ให้เอง
+   URL: `https://<USER>.github.io/kub-council-report-glm/`
+   (vite.config ตั้ง `base: "./"` ไว้แล้ว — ทำงานกับ subpath รวมถึง root ได้ทั้งคู่)
+
+> CORS ทราบล่วงหน้า: RPC ของ KUB Chain เปิด `Access-Control-Allow-Origin: *` (อ่านเชนจาก browser ได้ปกติ)
+> แต่ API kubcouncil ไม่แนบ CORS — หน้าเว็บจึงใช้ "ชื่อผู้สมัคร" ที่ตั้งฝังไว้ใน config
+> (ยืนยัน index กับเชนแล้ว — ดู comment ใน `src/config/election.ts`) ส่วนคะแนนทุกตัวยังมาจากเชนจริง
+
+## Deploy: Netlify (ทางเลือก, ถ้ายังอยากใช้ Netlify)
+
+1. บน [Netlify](https://app.netlify.com) เลือก **Add site → Import from Git → เลือก repo**
+2. Build command และ publish dir ดึงจากไฟล์ `netlify.toml` อัตโนมัติ:
    - Build command: `npm run build`
    - Publish: `dist`
-4. (ไม่ต้องตั้ง env ใด ๆ ใน Netlify เว้นแต่จะเปลี่ยน RPC — ทุก endpoint เป็น public)
+3. (ไม่ต้องตั้ง env ใด ๆ ใน Netlify เว้นแต่จะเปลี่ยน RPC — ทุก endpoint เป็น public)
 
 หรือ deploy แบบเร็ว (`npm i -g netlify-cli`):
 ```bash

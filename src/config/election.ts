@@ -161,7 +161,25 @@ export const proposalAbi = [
   },
 ] as const;
 
-/** topic0 ที่ยืนยันจาก log จริงบนเชน (24 logs ของช่วงเลือกตั้ง — ตรวจกับ ABI ในแอปด้วย viem อัตโนมัติ) */
+/** topic0 ที่ยืนยันจาก log จริงบนเชน (24 logs ของช่วงเลือกตั้ง — ตรวจกับ ABI ตอนรันด้วย viem อัตโนมัติ) */
 export const VERIFIED_TOPIC0 = {
   ProposalVoted: "0xf3801d77e9bff0fe5c3de5dfbdbe6cf3d04bb3e22005abfe7bf389dc78476fd1",
 } as const;
+
+/**
+ * ชื่อผู้สมัคร (label สำหรับแสดงผล) — ตรวจตรงกับ index ของ choice บนเชนแล้ว
+ * ณ 2026-10-22T07:42Z โดย cross-check กับ /api/votes ครบทุกข้อ (matchApi=true ทุกตัว,
+ * พิสูจน์ด้วย numOfChoice=4 ของข้อ #16 และตัวเลข per option ที่ตรงเป๊ะ)
+ *
+ * สำคัญ: เข้ารหัสไว้ตรงนี้เพียงเพื่อ label เหล่านี้จะอยู่ไปได้ไหนก็ไม่เป็นตัวเลข
+ * ใช้เพราะ API ไม่แนบ CORS ต่ใด ๆ! คะแนนทุกตัววัดจากบล็อกเชนเท่านั้น
+ * (API ที่ดึงได้เมื่อใด เรียกอันนั้นก่อน = src เดียวกัน)
+ */
+export const VERIFIED_CANDIDATE_NAMES: Record<number, readonly string[]> = {
+  19: ["VUTICHAI KUNPIPAT", "NUTCHAITAT TANTANASUWAN", "Abstain"],
+  18: ["NATTAWUT VISAYATAKSIN", "JAKKAPAN WINTHACHAI", "Abstain"],
+  17: ["RATTAPOLWARICH PUNCHAN", "NOPNARONG YOOKONGDEE", "Abstain"],
+  16: ["NARAYUT TITAWIRIYO", "NUTTAPORN JUNPRANOTE", "NOTHCHANON MALLIKAMAS", "Abstain"],
+  15: ["CHATREE YUKEE", "SIRINUPONG JANTHONG", "Abstain"],
+};
+export const NAMES_VERIFIED_AT = "2026-10-22T07:42Z";
