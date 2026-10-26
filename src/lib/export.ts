@@ -1,5 +1,6 @@
 import { downloadCsv } from "./csv";
 import type { ElectionModel } from "./election";
+import { buildWalletStats } from "./analytics";
 import { weiToGkubString } from "./format";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
@@ -61,4 +62,43 @@ export function exportSummaryCsv(model: ElectionModel): void {
 }
 export function exportDetailCsv(model: ElectionModel): void {
   downloadCsv(`kub-council-votes-${stamp()}.csv`, detailRows(model));
+}
+
+/** CSV 3: สรุปต่อผู้โหวต (กระเป๋า) — คะแนนเผา + ยอด gKUB ในกระเป๋า (ถ้าอ่านได้) */
+export function walletRows(
+  model: ElectionModel,
+  balances?: Map<string, bigint>,
+): Array<Record<string, string | number>> {
+  return buildWalletStats(model).map((w, i) => ({
+    rank: i + 1,
+    wallet: w.address,
+    balance_gkub_now:
+      balances?.get(w.address) != null
+        ? weiToGkubString(balances.get(w.address)!)
+        : "",
+    burned_vote_power_gkub: weiToGkubString(w.totalWei),
+    vote_tx_count: w.txCount,
+    proposals: w.proposalIds.map((x) => `#${x}`).join("|"),
+    first_vote_time_bkk: w.firstTs
+      ? new Date(w.firstTs * 1000).toLocaleString("th-TH", {
+          timeZone: "Asia/Bangkok",
+          hour12: false,
+        })
+      : "",
+    last_vote_time_bkk: w.lastTs
+      ? new Date(w.lastTs * 1000).toLocaleString("th-TH", {
+          timeZone: "Asia/Bangkok",
+          hour12: false,
+        })
+      : "",
+    data_source: "on-chain ProposalVoted + balanceOf",
+    captured_at_utc: new Date(model.fetchedAtMs).toISOString(),
+  }));
+}
+
+export function exportWalletCsv(
+  model: ElectionModel,
+  balances?: Map<string, bigint>,
+): void {
+  downloadCsv(`kub-council-wallets-${stamp()}.csv`, walletRows(model, balances));
 }

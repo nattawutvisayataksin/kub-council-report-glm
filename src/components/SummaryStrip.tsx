@@ -5,9 +5,10 @@ interface Props {
   model: ElectionModel;
   onExportSummary: () => void;
   onExportDetail: () => void;
+  onExportWallets?: () => void;
 }
 
-export function SummaryStrip({ model, onExportSummary, onExportDetail }: Props) {
+export function SummaryStrip({ model, onExportSummary, onExportDetail, onExportWallets }: Props) {
   const proposals = model.proposals.length;
   const quorumMet = model.proposals.filter((p) => p.quorumMet).length;
 
@@ -34,6 +35,11 @@ export function SummaryStrip({ model, onExportSummary, onExportDetail }: Props) 
         <button className="btn" onClick={onExportDetail}>
           ⬇ Export: แหล่งธุรกรรมโหวต (CSV)
         </button>
+        {onExportWallets && (
+          <button className="btn" onClick={onExportWallets}>
+            ⬇ Export: ต่อผู้โหวต (CSV)
+          </button>
+        )}
       </div>
     </section>
   );

@@ -54,7 +54,8 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
                                 │ cross-check (ชื่อผู้สมัคร + เทียบตัวเลข)
               https://kubcouncil.vercel.app/api/votes
                                 ▼
-        React UI: countdown, การ์ด 5 หมวด + กราฟแท่ง, ธุรกรรมล่าสุด, Export CSV, RPC status+block
+        React UI: countdown, การ์ด 5 หมวด + กราฟแท่ง, donut/timeline stats,
+        Analytics ต่อกระเป๋า (คะแนนเผา + balanceOf), ธุรกรรมล่าสุด, Export CSV ×3, RPC status+block
 ```
 
 - **initial scan**: จาก block `36255000` → latest (~22 chunks ของ 4000 บล็อก)
@@ -67,8 +68,15 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 - ตัวเลขคะแนน gKUB ต่อผู้สมัคร (exact wei formatting ไม่ปัดเศษ), จำนวนผู้โหวตไม่ซ้ำ, อันดับ, กราฟแท่ง + %
 - Status quorum (ผ่าน/ยังไม่ผ่าน 20 gKUB) และสถานะ proposal (เปิดโหวต / ผ่านเกณฑ์ / ปิด)
 - Countdown ปิดรับโหวต 10 พ.ย. 2026 12:00 น. (ไทย) + progress bar ของช่วงโหวต
+- **Analytics ผู้โหวต**: ตารางรวมทุกกระเป๋าที่ลงโหวต — คะแนนที่เผา (exact wei), จำนวน tx, หมวดที่ลง,
+  ยอด gKUB จริงในกระเป๋า ณ ปัจจุบัน (`balanceOf` อ่านสดจากเชน แบบ sequential ทยอยทีละใบ —
+  กด expand ดูประวัติโหวตทุกรายการพร้อมลิงก์ kubscan)
+- **Token stats**: name/symbol/decimals/totalSupply ของ gKUB อ่านจากเชน
+  (จริงแล้ว = "G KUB Token" · GKT · decimals 18) + สัดส่วนที่ถูกเผาเพื่อโหวต
+- **กราฟ/สถิติ**: Donut การกระจายคะแนนตามหมวด + Timeline เผา gKUB สะสมตามเวลา
+  (SVG วาดเอง ไม่เพิ่ม chart library)
+- Export CSV สามไฟล์: *ผลสรุป* ต่อ (ข้อ, ตัวเลือก) / *ทุกธุรกรรมโหวต* / *ต่อผู้โหวต* (มี tx hash + URL)
 - รายการธุรกรรมโหวตล่าสุด (block time, ผู้โหวต, ผู้สมัคร, คะแนน, link kubscan)
-- Export CSV สองไฟล์: *ผลสรุป* ต่อ (ข้อ, ตัวเลือก) และ *ทุกธุรกรรมโหวต* (มี tx hash + URL)
 - สถานะ RPC, block number ล่าสุด, อัปเดตล่าสุดเมื่อ x วินาทีก่อน, badge cross-check
 - ธีมลุค dark/neon-green แนว kubcouncil ฟอนต์ Kanit responsive both desktop/mobile
 
@@ -129,6 +137,15 @@ netlify deploy --build --prod
 - เว็บนี้ **ไม่ใช่ทรัพย์สินทางการ** ของ KUB / Kub Chain — เป็นเครื่องมือรายงานแบบ public interest
 - ข้อมูลมาจากบล็อกเชนสาธารณะ 100% (read-only) — ธุรกรรมโหวตเปิดดูได้เองบน kubscan ทุกครั้งผ่านลิงก์
 - gKUB decimals = 18 (พิสูจน์โดยนัย: minQuorum `20e18` == "20" ใน API และคะแนนตรงเป๊ะทุกตัว)
+- สัญลักษณ์ token จริงบนเชนคือ **"G KUB Token" (GKT)** — แอปแสดง name/symbol จากเชนสด
+- **ยอด gKUB ในกระเป๋า** ใช้ `balanceOf` อ่านสดจากเชน — เช็คเฉพาะกระเป๋าที่ลงโหวตเทิร์นนี้
+  (ไม่ใช่ทุกกระเป๋าทั้งเชนทั้งหมด เพราะ RPC สาธารณะไม่อนุญาตให้สแกน Transfer logs ทั้ง token
+  ตั้งแต่ genesis ได้ในขอบเขต endpoint นี้)
+- **rpc.kubchain.io มี rate limit** ("Request exceeds defined limit." เมื่อยิง burst พร้อมกัน) —
+  ระบบอ่าน balance ต้องแบบ sequential เว้น ~420ms ต่อใบ + retry/backoff (ผ่านการทดสอบ 22/22 ครบ)
+  ถ้ากระเป๋าไหนอ่านไม่สำเร็จ UI จะแสดง "—" พร้อมคำอธิบาย ไม่เดาตัวเลข
+- ยอด "ในกระเป๋า" คือยอด **ณ อ่านล่าสุด** (โหวตถูก burn ทันที จึงไม่รวมอยู่ในยอด) —
+  auto refresh ทุก ~5 นาที และกดปุ่มรีเฟรชได้ตลอด
 - API อย่างเป็นทางการอาจไม่ได้แสดง "ตัวเลข" แบบตรง timing เดียวกับการอ่านเชนเสมอ — ระบบจะแจ้ง
   `apiUpdatedAt` และแอปให้ความสำคัญกับค่า on-chain เป็นหลักเสมอ
 
@@ -138,15 +155,18 @@ netlify deploy --build --prod
 Kub-Council-Report-GLM/
 ├─ scripts/verify.ts        # พิสูจน์ end-to-end (npm run verify)
 ├─ src/
-│  ├─ components/           # Header, Countdown, ProposalCard, TxFeed, Banners, Footer
+│  ├─ components/           # Header, Countdown, StatsPanel (donut+timeline), ProposalCard, TxFeed, WalletTable, Banners, Footer
 │  ├─ hooks/useElection.ts  # polling 15 วิ + incremental scan
 │  ├─ hooks/useCountdown.ts
+│  ├─ hooks/useWalletAnalytics.ts  # balanceOf ทุกกระเป๋า แบบ sequential + progress
 │  ├─ lib/
 │  │  ├─ election.ts        # ระบบข้อมูลเหนือเชน (framework-free)
+│  │  ├─ analytics.ts       # สถิติต่อ wallet / timeline เผา / การกระจายตามหมวด
+│  │  ├─ token.ts           # อ่าน gKUB (KAP20): info + balanceOf + retry
 │  │  ├─ client.ts          # viem client (KUB Chain)
 │  │  ├─ api.ts             # cross-check kubcouncil API
 │  │  ├─ format.ts          # exact wei math + เวลา/BKK
-│  │  ├─ export.ts / csv.ts # CSV สองแบบ
+│  │  ├─ export.ts / csv.ts # CSV สามแบบ (ผลสรุป / ธุรกรรมโหวต / ต่อผู้โหวต)
 │  ├─ config/chain.ts       # KUB Chain (viem) + explorer helpers
 │  ├─ config/election.ts    # contract/gKUB/ABI + **ข้อมูลยืนยัน** (อ่าน comment ข้างใน)
 │  ├─ App.tsx / main.tsx / styles.css

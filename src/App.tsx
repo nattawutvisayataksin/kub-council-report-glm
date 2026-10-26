@@ -2,13 +2,16 @@ import { useMemo } from "react";
 import { Header } from "./components/Header";
 import { CountdownCard } from "./components/CountdownCard";
 import { SummaryStrip } from "./components/SummaryStrip";
+import { StatsPanel } from "./components/StatsPanel";
 import { ProposalCard } from "./components/ProposalCard";
 import { TxFeed } from "./components/TxFeed";
+import { WalletTable } from "./components/WalletTable";
 import { ApiFallbackBanner, UnavailableBanner } from "./components/Banners";
 import { Footer } from "./components/Footer";
 import { useElection } from "./hooks/useElection";
+import { useWalletAnalytics } from "./hooks/useWalletAnalytics";
 import { APP_CONFIG } from "./config/election";
-import { exportDetailCsv, exportSummaryCsv } from "./lib/export";
+import { exportDetailCsv, exportSummaryCsv, exportWalletCsv } from "./lib/export";
 
 function LoadingScreen({ first }: { first: boolean }) {
   return (
@@ -24,6 +27,7 @@ function LoadingScreen({ first }: { first: boolean }) {
 
 export default function App() {
   const { loading, model, refreshing, refreshNow } = useElection();
+  const wa = useWalletAnalytics(model);
 
   const nameOf = useMemo(
     () =>
@@ -59,13 +63,26 @@ export default function App() {
           model={model}
           onExportSummary={() => exportSummaryCsv(model)}
           onExportDetail={() => exportDetailCsv(model)}
+          onExportWallets={() => exportWalletCsv(model, wa.balances)}
         />
+        <StatsPanel model={model} />
         <section className="grid">
           {model.proposals.map((p) => (
             <ProposalCard key={p.id} p={p} />
           ))}
         </section>
         <TxFeed votes={feed} refunds={model.refunds} nameOf={nameOf} total={model.totalVoteCount} />
+        <WalletTable
+          model={model}
+          balances={wa.balances}
+          missing={wa.missing}
+          balancesUpdatedAtMs={wa.updatedAtMs}
+          balancesLoading={wa.loading}
+          progressDone={wa.progressDone}
+          progressTotal={wa.progressTotal}
+          tokenInfo={wa.tokenInfo}
+          onRefreshBalances={wa.refreshBalances}
+        />
       </main>
 
       <Footer />
