@@ -160,6 +160,12 @@ table.votes tr:hover td { background: rgba(47, 233, 122, 0.035); }
 .mono { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: 11.5px; }
 .muted { color: var(--muted); }
 
+/* ---- sortable table headers ---- */
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+th.sortable:hover { color: var(--accent); }
+th.sortable .sort-caret { font-size: 9px; margin-left: 4px; opacity: 0.9; color: var(--accent); }
+th.sortable .sort-idle { font-size: 9px; margin-left: 4px; opacity: 0.3; }
+
 /* ---- loading ---- */
 .loading {
   min-height: 60vh; display: flex; flex-direction: column;

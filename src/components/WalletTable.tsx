@@ -8,7 +8,8 @@
 import { useMemo, useState, Fragment } from "react";
 import type { TokenInfo } from "../lib/token";
 import type { ElectionModel } from "../lib/election";
-import { buildWalletStats } from "../lib/analytics";
+import { buildWalletStats, type WalletVoteStat } from "../lib/analytics";
+import { SortTh, nextSort, cmpBig, type SortState } from "./SortTh";
 import {
   fmtDateTimeShort,
   fmtNum,
@@ -54,11 +55,57 @@ export function WalletTable({
   const [expanded, setExpanded] = useState<string | null>(null);
   const stats = useMemo(() => buildWalletStats(model), [model]);
 
+  // ---- การเรียงลำดับ (คลิกหัวตาราง) — default: คะแนนที่เผา มาก→น้อย
+  type SortKey = "address" | "balance" | "burned" | "txs" | "proposals";
+  const [sort, setSortRaw] = useState<SortState>({ key: "burned", dir: "desc" });
+  const setSort = (s: SortState): void => setSortRaw(s);
+
+  const sorted = useMemo(() => {
+    if (sort.key === "burned" && sort.dir === "desc") return stats; // default (buildWalletStats เรียงไว้แล้ว)
+    const flip = sort.dir === "asc" ? 1 : -1;
+    const arr = [...stats];
+    const tie = (a: WalletVoteStat, b: WalletVoteStat): number =>
+      b.txCount - a.txCount || a.address.localeCompare(b.address);
+    switch (sort.key as SortKey) {
+      case "burned":
+        arr.sort((a, b) => flip * (cmpBig(a.totalWei, b.totalWei) || tie(a, b)));
+        break;
+      case "balance": {
+        const balOf = (w: WalletVoteStat): bigint | null => {
+          const b = balances.get(w.address);
+          return b == null ? null : b;
+        };
+        arr.sort((a, b) => {
+          const ba = balOf(a);
+          const bb = balOf(b);
+          // กระเป๋าที่ยอด "--" (อ่านไม่สำเร็จ) ท้ายสุดเสมอ ทุกทิศทางเรียง
+          const nul = (ba == null ? 1 : 0) - (bb == null ? 1 : 0);
+          if (nul !== 0) return nul;
+          if (ba == null || bb == null) return 0;
+          return flip * (cmpBig(ba, bb) || tie(a, b));
+        });
+        break;
+      }
+      case "txs":
+        arr.sort((a, b) => flip * (a.txCount - b.txCount || tie(a, b)));
+        break;
+      case "proposals":
+        arr.sort((a, b) => flip * (a.proposalIds.length - b.proposalIds.length || tie(a, b)));
+        break;
+      case "address":
+        arr.sort((a, b) => flip * a.address.localeCompare(b.address));
+        break;
+    }
+    return arr;
+  }, [stats, sort, balances]);
+
   const knownCount = stats.filter((w) => balances.has(w.address)).length;
   const agoSec =
     balancesUpdatedAtMs != null
       ? Math.max(0, (now - balancesUpdatedAtMs) / 1000)
       : null;
+  const onSort = (k: string): void =>
+    setSort(nextSort(sort, k, k === "address" ? "asc" : "desc"));
 
   // token supply: totalSupply() คือยอด "หลัง" การเผา — ยอดก่อนโหวต = supply + เผาเพื่อโหวต
   const burnedWei = model.totalVoteWei;
@@ -140,15 +187,15 @@ export function WalletTable({
             <thead>
               <tr>
                 <th className="rank-col">#</th>
-                <th>กระเป๋า</th>
-                <th style={{ textAlign: "right" }}>gKUB ในกระเป๋า (ปัจจุบัน)</th>
-                <th style={{ textAlign: "right" }}>คะแนนที่เผา (gKUB)</th>
-                <th style={{ textAlign: "right" }}>Tx</th>
-                <th>หมวดที่ลง</th>
+                <SortTh label="กระเป๋า" k="address" sort={sort} onSort={onSort} />
+                <SortTh label="gKUB ในกระเป๋า (ปัจจุบัน)" k="balance" sort={sort} onSort={onSort} right />
+                <SortTh label="คะแนนที่เผา (gKUB)" k="burned" sort={sort} onSort={onSort} right />
+                <SortTh label="Tx" k="txs" sort={sort} onSort={onSort} right />
+                <SortTh label="หมวดที่ลง" k="proposals" sort={sort} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
-              {stats.map((w, i) => {
+              {sorted.map((w, i) => {
                 const bal = balances.get(w.address);
                 const open = expanded === w.address;
                 return (

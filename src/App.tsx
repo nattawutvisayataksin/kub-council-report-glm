@@ -10,7 +10,6 @@ import { ApiFallbackBanner, UnavailableBanner } from "./components/Banners";
 import { Footer } from "./components/Footer";
 import { useElection } from "./hooks/useElection";
 import { useWalletAnalytics } from "./hooks/useWalletAnalytics";
-import { APP_CONFIG } from "./config/election";
 import { exportDetailCsv, exportSummaryCsv, exportWalletCsv } from "./lib/export";
 
 function LoadingScreen({ first }: { first: boolean }) {
@@ -48,8 +47,6 @@ export default function App() {
     );
   }
 
-  const feed = model.votes.slice(0, APP_CONFIG.TX_FEED_LIMIT);
-
   return (
     <div className="app">
       <Header model={model} refreshing={refreshing} refreshNow={refreshNow} />
@@ -71,7 +68,7 @@ export default function App() {
             <ProposalCard key={p.id} p={p} />
           ))}
         </section>
-        <TxFeed votes={feed} refunds={model.refunds} nameOf={nameOf} total={model.totalVoteCount} />
+        <TxFeed votes={model.votes} refunds={model.refunds} nameOf={nameOf} total={model.totalVoteCount} />
         <WalletTable
           model={model}
           balances={wa.balances}
