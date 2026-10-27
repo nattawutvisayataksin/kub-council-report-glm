@@ -20,8 +20,7 @@ export function Header({ model, refreshing, refreshNow }: Props) {
         <span className="logo">🗳️</span>
         <div>
           <div className="title election-title">
-            <span>KUB COMMUNITY COUNCIL</span>
-            <strong>ELECTION · ROUND 02</strong>
+            <strong>KUB COMMUNITY COUNCIL</strong>
           </div>
           <div className="subtitle">
             รายงานผลโหวตจริงที่อ่านจากบล็อกเชน KUB Chain Mainnet (Chain ID 96) · read-only · ไม่ใช่เว็บทางการ

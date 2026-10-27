@@ -1,5 +1,9 @@
 # KUB Council Report — GLM 🗳️
 
+> **Version 2.0 — Pixel Version first**
+>
+> Release นี้ตั้ง Pixel Version เป็นธีมเริ่มต้นสำหรับผู้เข้าชมใหม่ พร้อม Hero banner แบบเลื่อนช้า ๆ, แสง pixel ที่เคลื่อนไหวเบา ๆ, countdown progress animation และ leader vote bar highlight โดยไม่เปลี่ยนแปลงข้อมูล on-chain หรือระบบ tally
+
 ⚡ **Power by VeeNagi** (ผู้พัฒนา)
 
 Dashboard เกาะติด **ผลโหวตจริงจากบล็อกเชน** ของ **KUB Community Council Election Round 2**
@@ -80,7 +84,7 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 - Export CSV สามไฟล์: *ผลสรุป* ต่อ (ข้อ, ตัวเลือก) / *ทุกธุรกรรมโหวต* / *ต่อผู้โหวต* (มี tx hash + URL)
 - รายการธุรกรรมโหวตล่าสุด (block time, ผู้โหวต, ผู้สมัคร, คะแนน, link kubscan)
 - สถานะ RPC, block number ล่าสุด, อัปเดตล่าสุดเมื่อ x วินาทีก่อน, badge cross-check
-- ธีม classic dark/neon-green และธีม **Pixel Arts** ที่สลับจากปุ่มมุมขวาบน (จำค่าไว้ใน browser)
+- ธีม classic dark/neon-green และธีม **Pixel Arts** ที่สลับจากปุ่มมุมขวาบน (จำค่าไว้ใน browser; ผู้เข้าชมใหม่เริ่มที่ Pixel)
 - ธีม Pixel ใช้ artwork ที่สร้างด้วย PixelLab: hero banner นักผจญภัยชาย 5 คน, wordmark KUB และ creator credit ของ VeeNagi
 
 ## รันเอง

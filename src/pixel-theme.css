@@ -46,6 +46,80 @@ html.pixel-theme body::before {
   filter: grayscale(1) brightness(1.15) sepia(1) hue-rotate(88deg) saturate(5);
 }
 
+/* Hero banner: keep the original artwork colourful, then add animated pixel light. */
+.pixel-theme .pixel-banner {
+  position: relative;
+  isolation: isolate;
+  border-color: #eafff1;
+  background: #07110d;
+  box-shadow: 5px 5px 0 #000, 0 0 0 2px #2fe97a, 0 0 28px rgba(47, 233, 122, 0.28);
+}
+.pixel-banner__track {
+  display: flex;
+  width: 200%;
+  height: 210px;
+  animation: pixel-banner-marquee 28s linear infinite;
+  will-change: transform;
+}
+.pixel-theme .pixel-banner img {
+  position: relative;
+  z-index: 0;
+  flex: 0 0 50%;
+  width: 50%;
+  height: 210px;
+  object-fit: cover;
+  filter: saturate(1.18) contrast(1.08) brightness(1.05);
+  transform: scale(1.015);
+}
+.pixel-banner__aurora,
+.pixel-banner__scanlines,
+.pixel-banner__badge {
+  position: absolute;
+  pointer-events: none;
+}
+.pixel-banner__aurora {
+  z-index: 1;
+  inset: 0;
+  background:
+    linear-gradient(105deg, rgba(47, 233, 122, 0.28), transparent 32%, rgba(255, 209, 102, 0.18) 58%, rgba(86, 185, 255, 0.2)),
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.32), transparent 13%),
+    radial-gradient(circle at 82% 72%, rgba(47, 233, 122, 0.3), transparent 22%);
+  mix-blend-mode: screen;
+  background-size: 140% 140%, 100% 100%, 120% 120%;
+  opacity: 0.56;
+  animation: pixel-banner-aurora 18s ease-in-out infinite alternate;
+}
+.pixel-banner__scanlines {
+  z-index: 2;
+  inset: 0;
+  background: repeating-linear-gradient(0deg, transparent 0 5px, rgba(255, 255, 255, 0.07) 5px 6px);
+  opacity: 0.32;
+  mix-blend-mode: screen;
+}
+.pixel-banner__badge {
+  z-index: 3;
+  right: 12px;
+  bottom: 10px;
+  padding: 5px 8px;
+  border: 2px solid #eafff1;
+  background: #07110d;
+  color: #eafff1;
+  font-family: "Press Start 2P", monospace;
+  font-size: 7px;
+  line-height: 1.4;
+  letter-spacing: 0.5px;
+  box-shadow: 3px 3px 0 #000;
+}
+
+@keyframes pixel-banner-aurora {
+  0% { filter: hue-rotate(0deg) brightness(0.95); transform: translateX(-2%); }
+  100% { filter: hue-rotate(22deg) brightness(1.18); transform: translateX(2%); }
+}
+@keyframes pixel-banner-marquee {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
 /* ปุ่ม/ชิป/การ์ด: ขอบเหลี่ยมสไตล์ pixel พร้อมพื้นสีเขียวเข้มที่อ่านง่าย */
 .pixel-theme .card,
 .pixel-theme .stat,
@@ -151,15 +225,22 @@ html.pixel-theme body::before {
 .pixel-theme .election-title {
   display: inline-flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 7px 11px 8px;
-  border: 3px solid #2fe97a;
-  background: linear-gradient(90deg, #16352a 0 82%, #2fe97a 82% 100%);
-  box-shadow: 4px 4px 0 #07110d;
+  gap: 0;
+  padding: 9px 14px 10px;
+  border: 3px solid #97ffbd;
+  background:
+    linear-gradient(110deg, rgba(47, 233, 122, 0.18), transparent 48%),
+    linear-gradient(90deg, #16352a 0 78%, #245d43 78% 100%);
+  box-shadow: 4px 4px 0 #07110d, inset 0 0 0 2px rgba(255, 209, 102, 0.2);
   text-shadow: none;
 }
-.pixel-theme .election-title span { font-size: 9px; letter-spacing: 1px; color: #eafff1; }
-.pixel-theme .election-title strong { font-size: 14px; letter-spacing: 1px; color: #2fe97a; text-shadow: 2px 2px 0 #07110d; }
+.pixel-theme .election-title strong {
+  font-size: 17px;
+  line-height: 1.45;
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-shadow: 2px 2px 0 #07110d, 0 0 10px rgba(47, 233, 122, 0.45);
+}
 .pixel-theme .subtitle { font-family: "Kanit", sans-serif; font-size: 13px; font-weight: 400; line-height: 1.55; color: #e8f6ee; }
 .pixel-theme .card h3 { font-size: 11px; line-height: 1.9; color: #97ffbd; }
 .pixel-theme .cat {
@@ -189,10 +270,42 @@ html.pixel-theme body::before {
     #1db95f 0 8px,
     #2fe97a 8px 16px
   );
+  background-size: 32px 100%;
   box-shadow: none;
 }
+.pixel-theme .progress > span {
+  animation: countdown-progress-flow 2.4s linear infinite;
+}
+@keyframes countdown-progress-flow {
+  from { background-position: 0 0; }
+  to { background-position: 32px 0; }
+}
 .pixel-theme .op.leader .bar > span {
+  position: relative;
   background: repeating-linear-gradient(90deg, #2fe97a 0 8px, #ffffff 8px 16px);
+  background-size: 32px 100%;
+  box-shadow: 0 0 10px rgba(47, 233, 122, 0.9), 0 0 22px rgba(255, 209, 102, 0.42);
+  animation: leader-bar-shimmer 1.25s steps(8, end) infinite;
+}
+.pixel-theme .op.leader .bar {
+  border-color: #eafff1;
+  box-shadow: 0 0 0 2px rgba(47, 233, 122, 0.22), 0 0 16px rgba(47, 233, 122, 0.28);
+  animation: leader-bar-pulse 1.25s steps(2, end) infinite;
+}
+.pixel-theme .op.leader .rank {
+  animation: leader-rank-pulse 1.25s steps(2, end) infinite;
+}
+@keyframes leader-bar-shimmer {
+  from { background-position: 0 0; }
+  to { background-position: 32px 0; }
+}
+@keyframes leader-bar-pulse {
+  0%, 45% { border-color: #eafff1; }
+  50%, 100% { border-color: #2fe97a; }
+}
+@keyframes leader-rank-pulse {
+  0%, 45% { transform: translateY(0); box-shadow: 0 0 0 rgba(47, 233, 122, 0); }
+  50%, 100% { transform: translateY(-2px); box-shadow: 2px 2px 0 #000, 0 0 12px rgba(47, 233, 122, 0.65); }
 }
 .pixel-theme .op.abstain .bar > span { background: #ffffff; }
 .pixel-theme .op .rank { border-radius: 0; font-size: 8px; background: #000; color: #2fe97a; border: 2px solid #2fe97a; }
@@ -409,11 +522,12 @@ html.pixel-theme body::before {
   .pixel-theme .header { padding-right: 0; padding-top: 52px; }
   .pixel-theme .subtitle { font-size: 12px; }
   .pixel-theme .election-title { padding: 6px 8px 7px; }
-  .pixel-theme .election-title span { font-size: 7px; }
-  .pixel-theme .election-title strong { font-size: 10px; }
+  .pixel-theme .election-title strong { font-size: 11px; letter-spacing: 0.8px; }
   .pixel-theme .op .op-name { font-size: 14px; }
   .pixel-theme .op .op-votes { width: 100%; margin-left: 30px; }
-  .pixel-banner img { height: 150px; }
+  .pixel-banner__track,
+  .pixel-theme .pixel-banner img { height: 150px; }
+  .pixel-banner__badge { right: 7px; bottom: 7px; font-size: 6px; padding: 4px 5px; }
   .pixel-theme .tok-strip .wal-chip { font-size: 12px; }
   .pixel-theme .tok-strip .burn-summary b { font-size: 8px; }
   .pixel-theme .tok-strip .burn-summary small { font-size: 10px; white-space: normal; }
@@ -424,4 +538,15 @@ html.pixel-theme body::before {
   .pixel-theme .legend .vv, .pixel-theme .legend .pp { font-size: 6px; }
   .pixel-theme .powered { gap: 7px; }
   .pixel-theme .powered small { font-size: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pixel-banner__track,
+  .pixel-banner__aurora,
+  .pixel-theme .progress > span,
+  .pixel-theme .op.leader .bar,
+  .pixel-theme .op.leader .bar > span,
+  .pixel-theme .op.leader .rank {
+    animation: none;
+  }
 }

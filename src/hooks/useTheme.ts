@@ -11,7 +11,7 @@ function readInitial(): ThemeMode {
   } catch {
     /* ignore */
   }
-  return "classic";
+  return "pixel";
 }
 
 /**

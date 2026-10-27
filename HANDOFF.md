@@ -1,6 +1,6 @@
 # 📋 HANDOFF — KUB Council Report GLM (สามารถอ่านไฟล์นี้เดียวแล้วทำต่อได้)
 
-> อัปเดตล่าสุด: 2026-10-27 · สถานะ: v1.1 + Pixel theme อยู่ใน working tree (ต้อง commit/push เพื่อ deploy)
+> อัปเดตล่าสุด: 2026-10-27 · สถานะ: **Version 2.0 เสร็จสมบูรณ์** — Pixel Version เป็นธีมเริ่มต้น, ปรับ motion/กราฟิกแล้ว และพร้อมพักโปรเจค
 > URL: https://nattawutvisayataksin.github.io/kub-council-report-glm/
 
 ---
@@ -118,10 +118,15 @@ Deploy: `git push origin main` → GH Actions build+pages auto (~2 นาที)
 - [ ] เสียง/แจ้งเตือน เมื่อมีโหวตใหม่
 - [ ] Refund table เรียงได้ด้วย (ปุ่มแสดงทั้งหมด refunds)
 
-## 9) Pixel theme (อัปเดต 27 ต.ค. 2026)
+## 9) Pixel theme (Version 2.0 · อัปเดต 27 ต.ค. 2026)
 
 - เปิดธีมด้วย class `pixel-theme` บน `<html>` ผ่าน `useTheme`; ไม่แตะ data/tally logic
+- ผู้เข้าชมใหม่ที่ยังไม่มีค่า `kub-council-theme` ใน localStorage จะเริ่มที่ **Pixel Version** อัตโนมัติ
+- ผู้ใช้เดิมที่เคยเลือกธีมไว้จะยังคง preference เดิมผ่าน localStorage; ล้างค่า `kub-council-theme` เพื่อทดสอบ default Pixel ใหม่
 - Hero ปัจจุบันต้องเป็น artwork PixelLab ที่มีผู้ชาย adult **5 คนเท่านั้น**; หาก output ไม่ตรง ให้สร้างใหม่ด้วย prompt ที่ระบุจำนวนชัดเจน
+- Hero แสดงภาพซ้ำสองชุดเป็น marquee จากซ้ายไปขวาแบบวนต่อเนื่อง ใช้ความเร็วช้า 28 วินาทีต่อรอบ; แสง aurora ด้านหลังเคลื่อนช้า ๆ และภาพตัวละครไม่ zoom/สั่น
+- แถบ progress ของ countdown มีลาย pixel เคลื่อนเบา ๆ; แถบคะแนนของผู้นำมี shimmer/glow และ rank pulse เพื่อให้เด่นกว่าตัวเลือกอื่น
+- ผู้ใช้ที่เปิด `prefers-reduced-motion` จะหยุด motion ของ banner, aurora, progress และ leader bar
 - KUB ใช้ wordmark Pixel ที่ออกแบบใน `src/assets/pixel/kub-wordmark.svg` สำหรับ header และปุ่มธีม
 - Footer ใช้ monogram `V` และชื่อ `VeeNagi` แบบ Pixel typography; ไม่ใช้โลโก้งู
 - ค่า `PIXELLAB_TOKEN` ห้ามเก็บใน markdown, source, หรือ git; ให้ตั้ง environment variable หรือ `scripts/pixellab-token.txt` (ถูก ignore)
@@ -144,8 +149,19 @@ Deploy: `git push origin main` → GH Actions build+pages auto (~2 นาที)
 - ก่อน publish ให้รัน `npm run build`; หากเป็นการเปลี่ยน data/tally ให้รัน `npm run verify` เพิ่ม
 - push `main` จะ deploy ไป GitHub Pages จาก `.github/workflows/deploy.yml`; หลัง push ต้องเช็ค Actions และเว็บจริง
 
-## 12) Git
+## 12) Version 2.0 release checklist
 
-- HEAD เดิม: `a2a28bf` (Pixel palette) — มีงาน Pixel theme/documentation ที่ยังไม่ commit ใน working tree
+- [x] Pixel Version เป็นหน้าแรกสำหรับผู้เข้าชมใหม่
+- [x] ปรับ Hero banner ให้มีสีสัน แสง aurora และ marquee motion แบบช้า
+- [x] ปรับ `KUB COMMUNITY COUNCIL` ให้อ่านง่ายและลบ `ROUND 02` ออกจากหัวข้อ
+- [x] เพิ่ม motion ที่ countdown progress และ leader vote bar
+- [x] รองรับ `prefers-reduced-motion`
+- [x] `npm run build` ผ่านหลังการปรับ UI
+- [ ] ตรวจ GitHub Actions และหน้า production หลัง push (ทำเป็นขั้นตอนสุดท้ายของ release)
+
+## 13) Git
+
+- Release target: **Version 2.0** — หลัง push ให้ถือเป็น baseline สำหรับพักโปรเจค
+- งาน Pixel theme/documentation ที่เกี่ยวข้องกับ Version 2.0 ต้อง commit/push ให้เรียบร้อยก่อนพัก
 - remote: `nattawutvisayataksin/kub-council-report-glm` (main, deploy via Actions)
 - เหลือไฟล์ชั่วคราวเว้นหน้า repo: none (ทดสอบอ่าน token อ่านแล้วลบ)

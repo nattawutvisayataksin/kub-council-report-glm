@@ -11,7 +11,7 @@ if (-not $token) { throw "No PixelLab token. Set PIXELLAB_TOKEN or create script
 
 $outFile = Join-Path $PSScriptRoot "..\src\assets\pixel\kub-pixel-party-banner.png"
 $prompt = @"
-Wide pixel art hero banner for a KUB Chain community council election dashboard. Five original heroic fantasy adventurers, a knight, ranger, mage, engineer, and guardian, standing together in a confident party pose. Modern polished 16-bit JRPG aesthetic, crisp readable pixel clusters, distinct silhouettes, emerald KUB green (#2fe97a), deep forest green, white, and limited gold/blue accents. Add a subtle abstract KUB-inspired geometric emblem in the background, but no text, no letters, no logos copied from other games, no UI, no watermark. Bright, professional, high contrast, landscape composition with clear empty side margins.
+Wide cinematic pixel art hero banner for a KUB Chain community council election dashboard. Exactly five original adult male heroic fantasy adventurers — knight, ranger, mage, engineer, and guardian — standing together in a confident party pose. Grand polished 16-bit JRPG aesthetic, crisp readable pixel clusters, dramatic emerald and cyan rim lighting, warm gold magical highlights, deep forest shadows, luminous particles, subtle energy arcs, and a rich colorful night-sky atmosphere. Distinct silhouettes, high contrast, landscape composition with clear empty side margins. Add a subtle abstract KUB-inspired geometric emblem in the background, but no text, no letters, no logos copied from other games, no UI, no watermark.
 "@
 
 $body = @{
