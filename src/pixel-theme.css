@@ -1,18 +1,19 @@
-/* ============ PIXEL ARTS VERSION — ธีม retro 16-bit (override styles.css) ============
+/* ============ PIXEL ARTS VERSION — ธีม retro 16-bit สไตล์ KUB Chain (override styles.css) ============
+   Palette 3 สีเท่านั้น: เขียว KUB (#2fe97a) / ดำ (#000) / ขาว (#fff)
    เปิดใช้ด้วยการเพิ่ม class "pixel-theme" ที่ <html> — assets สร้างด้วย PixelLab MCP/API
-   อยู่ใน public/pixel/ */
+   อยู่ใน src/assets/pixel/ */
 
 .pixel-theme {
-  --bg: #0b0f1a;
-  --panel: #141b2e;
-  --panel2: #1a2340;
-  --line: #3b4a7a;
-  --accent: #7dfc4a;
-  --text: #f2f6ff;
-  --muted: #8ea0c9;
-  --warn: #ffcf4a;
-  --bad: #ff5f6e;
-  --good: #7dfc4a;
+  --bg: #000000;
+  --panel: #000000;
+  --panel2: #050505;
+  --line: #2fe97a;
+  --accent: #2fe97a;
+  --text: #ffffff;
+  --muted: rgba(255, 255, 255, 0.65);
+  --warn: #ffffff;
+  --bad: #ffffff;
+  --good: #2fe97a;
   --pixel-border: 4px;
 }
 
@@ -22,7 +23,7 @@
   image-rendering: pixelated;
 }
 
-/* bg-tile: Vite resolve url() สัมพัทธ์กับไฟล์ CSS นี้ */
+/* bg-tile: ย้อมเป็นเขียว-ดำ (3 สี) ด้วย CSS filter — Vite resolve url() สัมพัทธ์กับไฟล์ CSS นี้ */
 html.pixel-theme body {
   background:
     url("./assets/pixel/bg-tile.png") repeat,
@@ -30,8 +31,24 @@ html.pixel-theme body {
   background-size: 256px 256px, auto;
   image-rendering: pixelated;
 }
+html.pixel-theme body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: rgba(0, 0, 0, 0.55);
+}
 
-/* ปุ่ม/ชิป/การ์ด: ขอบเหลี่ยมสไตล์ pixel (box-shadow แทน border-radius) */
+/* ย้อม asset ทุกชิ้นเป็นเขียว monochrome (คง palette 3 สี) */
+.pixel-theme .pixel-banner img,
+.pixel-theme .pixel-brand-sprite,
+.pixel-theme .theme-toggle img,
+.pixel-theme .pixel-sprite {
+  filter: grayscale(1) brightness(1.15) sepia(1) hue-rotate(88deg) saturate(5);
+}
+
+/* ปุ่ม/ชิป/การ์ด: ขอบเหลี่ยมสไตล์ pixel (box-shadow แทน border-radius) — ดำขอบเขียว */
 .pixel-theme .card,
 .pixel-theme .stat,
 .pixel-theme .cd-box,
@@ -43,21 +60,25 @@ html.pixel-theme body {
 .pixel-theme .powered {
   border-radius: 0 !important;
   border: 3px solid var(--line);
+  background: #000000;
+  color: var(--text);
   box-shadow:
-    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
-    inset 3px 3px 0 rgba(255, 255, 255, 0.06),
-    4px 4px 0 rgba(0, 0, 0, 0.5);
+    inset -3px -3px 0 rgba(47, 233, 122, 0.15),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.08),
+    4px 4px 0 #000000;
   image-rendering: pixelated;
 }
 
 .pixel-theme .card {
-  background: linear-gradient(180deg, #16203a 0%, #101728 100%);
+  background: #000000;
 }
 
 .pixel-theme .chip {
   font-size: 9px;
   line-height: 1.6;
   padding: 5px 10px;
+  background: #000000;
+  color: var(--accent);
 }
 
 .pixel-theme .btn {
@@ -65,47 +86,56 @@ html.pixel-theme body {
   font-size: 10px;
   line-height: 1.6;
   padding: 9px 14px;
-  background: #1d2a4d;
+  background: #000000;
+  color: #ffffff;
+  border-color: #ffffff;
   text-shadow: 1px 1px 0 #000;
   transition: none;
 }
 .pixel-theme .btn:hover {
-  background: #27375f;
-  color: var(--accent);
+  background: #2fe97a;
+  color: #000000;
+  border-color: #2fe97a;
+  text-shadow: none;
   transform: translate(-1px, -1px);
   box-shadow:
     inset -3px -3px 0 rgba(0, 0, 0, 0.35),
-    inset 3px 3px 0 rgba(255, 255, 255, 0.06),
-    6px 6px 0 rgba(0, 0, 0, 0.5);
+    inset 3px 3px 0 rgba(255, 255, 255, 0.25),
+    6px 6px 0 #000000;
 }
 .pixel-theme .btn.primary {
-  background: #1f4d2a;
-  border-color: var(--accent);
-  color: #d9ffbe;
+  background: #2fe97a;
+  border-color: #2fe97a;
+  color: #000000;
+  text-shadow: none;
 }
-.pixel-theme .btn.primary:hover { background: #2a6b39; }
+.pixel-theme .btn.primary:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #000000;
+}
 
-/* หัวข้อ/ตัวอักษร */
-.pixel-theme .brand .title { font-size: 14px; line-height: 1.8; text-shadow: 2px 2px 0 #000; }
-.pixel-theme .subtitle { font-size: 9px; line-height: 1.8; }
-.pixel-theme .card h3 { font-size: 11px; line-height: 1.9; }
+/* หัวข้อ/ตัวอักษร — ขาวกับเขียวบนดำเท่านั้น */
+.pixel-theme .brand .title { font-size: 14px; line-height: 1.8; color: #ffffff; text-shadow: 2px 2px 0 #2fe97a; }
+.pixel-theme .subtitle { font-size: 9px; line-height: 1.8; color: var(--muted); }
+.pixel-theme .card h3 { font-size: 11px; line-height: 1.9; color: #2fe97a; }
 .pixel-theme .cat {
   font-family: inherit; font-size: 8px; border-radius: 0;
-  background: #1f4d2a; border-color: var(--accent); padding: 4px 8px;
+  background: #000000; color: #2fe97a; border: 2px solid #2fe97a; padding: 4px 8px;
 }
-.pixel-theme .pill { border-radius: 0; font-size: 8px; padding: 4px 8px; line-height: 1.5; }
-.pixel-theme .muted, .pixel-theme .l, .pixel-theme .bar-sub { font-size: 9px; line-height: 1.7; }
-.pixel-theme .stat .v { font-size: 14px; text-shadow: 2px 2px 0 #000; }
-.pixel-theme .stat .l { font-size: 8px; }
-.pixel-theme .cd-box .v { font-size: 18px; text-shadow: 2px 2px 0 #000; }
-.pixel-theme .cd-box .l { font-size: 8px; }
+.pixel-theme .pill { border-radius: 0; font-size: 8px; padding: 4px 8px; line-height: 1.5; background: #000; color: #fff; border: 2px solid #fff; }
+.pixel-theme .muted, .pixel-theme .l, .pixel-theme .bar-sub { font-size: 9px; line-height: 1.7; color: var(--muted); }
+.pixel-theme .stat .v { font-size: 14px; color: #2fe97a; text-shadow: 2px 2px 0 #000; }
+.pixel-theme .stat .l { font-size: 8px; color: #ffffff; }
+.pixel-theme .cd-box .v { font-size: 18px; color: #2fe97a; text-shadow: 2px 2px 0 #000; }
+.pixel-theme .cd-box .l { font-size: 8px; color: #ffffff; }
 
-/* progress bar เหลี่ยม */
+/* progress bar เหลี่ยม — เขียวสลับเขียวอ่อนบนรางดำ */
 .pixel-theme .progress,
 .pixel-theme .bar {
   border-radius: 0;
-  border: 2px solid var(--line);
-  background: #0a0f1e;
+  border: 2px solid #2fe97a;
+  background: #000000;
   height: 14px;
 }
 .pixel-theme .progress > span,
@@ -113,39 +143,40 @@ html.pixel-theme body {
   border-radius: 0;
   background: repeating-linear-gradient(
     90deg,
-    #4adc1e 0 8px,
-    #7dfc4a 8px 16px
+    #1db95f 0 8px,
+    #2fe97a 8px 16px
   );
   box-shadow: none;
 }
 .pixel-theme .op.leader .bar > span {
-  background: repeating-linear-gradient(90deg, #7dfc4a 0 8px, #d9ff7c 8px 16px);
+  background: repeating-linear-gradient(90deg, #2fe97a 0 8px, #ffffff 8px 16px);
 }
-.pixel-theme .op.abstain .bar > span { background: #3c4a6e; }
-.pixel-theme .op .rank { border-radius: 0; font-size: 8px; }
-.pixel-theme .op .op-name { font-size: 10px; }
-.pixel-theme .op .tag { border-radius: 0; font-size: 8px; }
+.pixel-theme .op.abstain .bar > span { background: #ffffff; }
+.pixel-theme .op .rank { border-radius: 0; font-size: 8px; background: #000; color: #2fe97a; border: 2px solid #2fe97a; }
+.pixel-theme .op .op-name { font-size: 10px; color: #ffffff; }
+.pixel-theme .op .tag { border-radius: 0; font-size: 8px; background: #000; color: #fff; border: 2px solid #fff; }
 
-/* ตาราง */
-.pixel-theme table.votes th { background: #1a2340; font-size: 9px; }
-.pixel-theme table.votes td { font-size: 9px; line-height: 1.8; }
-.pixel-theme .mono { font-size: 8px; }
+/* ตาราง — หัวเขียวบนดำ ตัวหนังสือขาว */
+.pixel-theme table.votes th { background: #2fe97a; color: #000000; font-size: 9px; }
+.pixel-theme table.votes td { font-size: 9px; line-height: 1.8; color: #ffffff; border-color: rgba(47, 233, 122, 0.35); }
+.pixel-theme .mono { font-size: 8px; color: #2fe97a; }
 
-/* footer */
+/* footer — เขียวล้วน ตัวหนังสือดำ */
 .pixel-theme .powered {
   font-size: 10px;
-  background: linear-gradient(180deg, #1f4d2a, #14301c);
-  border-color: var(--accent);
+  background: #2fe97a;
+  color: #000000;
+  border-color: #ffffff;
 }
 
-/* spinner เป็นบล็อก pixel */
+/* spinner เป็นบล็อก pixel เขียวบนดำ */
 .pixel-theme .spinner {
   border-radius: 0;
-  border: 4px solid #1a2340;
-  border-top-color: var(--accent);
+  border: 4px solid #000000;
+  border-top-color: #2fe97a;
 }
 
-/* ---- ปุ่มสลับธีม มุมขวาบนสุด ---- */
+/* ---- ปุ่มสลับธีม มุมขวาบนสุด — ดำขอบเขียว ---- */
 .theme-toggle {
   position: fixed;
   top: 12px;
@@ -154,9 +185,9 @@ html.pixel-theme body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 3px solid var(--line);
-  background: #1d2a4d;
-  color: var(--text);
+  border: 3px solid #2fe97a;
+  background: #000000;
+  color: #2fe97a;
   font-family: "Press Start 2P", "Kanit", monospace;
   font-size: 10px;
   line-height: 1.5;
@@ -164,15 +195,16 @@ html.pixel-theme body {
   cursor: pointer;
   border-radius: 0;
   box-shadow:
-    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
-    inset 3px 3px 0 rgba(255, 255, 255, 0.08),
-    4px 4px 0 rgba(0, 0, 0, 0.55);
+    inset -3px -3px 0 rgba(47, 233, 122, 0.2),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.1),
+    4px 4px 0 #000000;
   text-shadow: 1px 1px 0 #000;
   image-rendering: pixelated;
 }
 .theme-toggle:hover {
-  background: #27375f;
-  color: var(--accent);
+  background: #2fe97a;
+  color: #000000;
+  text-shadow: none;
   transform: translate(-1px, -1px);
 }
 .theme-toggle img {
@@ -185,11 +217,12 @@ html.pixel-theme body {
 .header { padding-right: 300px; }
 .pixel-theme .header { padding-right: 190px; }
 
-/* banner pixel-art ด้านบนของเวอร์ชัน Pixel */
+/* banner pixel-art ด้านบนของเวอร์ชัน Pixel — กรอบเขียวบนดำ */
 .pixel-banner {
   margin: 12px 0 4px;
-  border: 3px solid var(--line);
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  border: 3px solid #2fe97a;
+  background: #000000;
+  box-shadow: 4px 4px 0 #000000;
   image-rendering: pixelated;
   overflow: hidden;
   line-height: 0;
@@ -213,7 +246,7 @@ html.pixel-theme body {
   width: 56px;
   height: 56px;
   image-rendering: pixelated;
-  filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.6));
+  filter: grayscale(1) brightness(1.15) sepia(1) hue-rotate(88deg) saturate(5) drop-shadow(3px 3px 0 #000);
   animation: pixel-bob 1.6s steps(2) infinite;
 }
 @keyframes pixel-bob {
@@ -221,7 +254,7 @@ html.pixel-theme body {
   50% { transform: translateY(-4px); }
 }
 
-/* donut เป็นเหลี่ยม */
+/* donut เป็นเหลี่ยม — เขียว/ขาว/ดำ */
 .pixel-theme .donut svg circle { shape-rendering: crispEdges; }
 
 @media (max-width: 560px) {
