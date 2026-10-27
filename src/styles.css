@@ -193,6 +193,49 @@ footer .mono { color: #7ba98e; }
   color: var(--text); font-size: 14px; letter-spacing: 0.4px;
 }
 .powered b { color: var(--accent); font-weight: 600; letter-spacing: 0.6px; }
+.powered {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.powered .veenagi-mark {
+  width: 38px;
+  height: 38px;
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  border: 1px solid var(--accent);
+  border-radius: 9px;
+  background: rgba(47, 233, 122, 0.1);
+  color: var(--accent);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1;
+}
+.powered > span:not(.veenagi-mark) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+}
+.powered .creator-label {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+}
+.powered .veenagi-name {
+  color: var(--accent);
+  font-size: 14px;
+  letter-spacing: 0.6px;
+}
+.powered small:not(.creator-label) {
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--muted);
+}
 
 /* ---- stats: donut / timeline ---- */
 .stats-grid {
@@ -270,4 +313,5 @@ footer .mono { color: #7ba98e; }
   table.votes { min-width: 640px; }
   .donut-wrap { justify-content: center; }
   .legend { min-width: 240px; }
+  .powered { justify-content: flex-start; }
 }
