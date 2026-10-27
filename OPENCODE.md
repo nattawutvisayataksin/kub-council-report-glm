@@ -25,6 +25,18 @@ npm run verify
 - Generator scripts are under `scripts/gen-pixel-*.ps1`. Keep prompts reproducible and artwork original.
 - Current production hero asset is `src/assets/pixel/kub-pixel-party-banner.png`; it should show exactly five adult male adventurers.
 
+## KUB staking and unlock research
+
+- The workspace also configures the public `kub-docs` MCP server at `https://docs.kubchain.com/~gitbook/mcp`.
+- For file-based or offline research, start with `https://docs.kubchain.com/llms.txt`; it is a current page index. Use `llms-full.txt` only when a full static snapshot is required because it can become stale.
+- Run `scripts/refresh-kub-docs-index.ps1` to save the current `llms.txt` under `.cache/kub-docs/` (gitignored).
+- Run `scripts/refresh-kub-docs-index.ps1 -Full` to download `.cache/kub-docs/llms-full.txt` when one offline static snapshot is required. Refresh it before time-sensitive research.
+- Before implementing GKT/KUB staking, NFT staking, or unlock analytics, use KUB Docs to locate the official contract addresses, ABI/source links, event names, and unlock rules.
+- Treat Docs results as discovery only: verify each address and function against verified Kubscan source before displaying values.
+- Do not infer a staking value from gKUB vote-burn events. Join voter wallets to staking state only after the relevant staking contract and ABI are verified.
+- Maintain RPC safety: chunk logs; read per-wallet state sequentially with the existing delay/backoff strategy.
+- KUB staking research code exists but its UI is intentionally parked/hidden. Do not re-enable it without a new user request and a review of validator/delegator scope, cache design, and RPC cost.
+
 ## Publish
 
 ```powershell

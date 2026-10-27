@@ -5,6 +5,7 @@ dist
 *.log
 .DS_Store
 scripts/pixellab-token.txt
+.cache/
 
 # Local Netlify folder
 .netlify

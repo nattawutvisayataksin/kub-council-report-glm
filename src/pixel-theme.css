@@ -225,6 +225,7 @@ html.pixel-theme body::before {
   font-family: "Press Start 2P", monospace;
   font-size: 6px;
 }
+.pixel-theme .unlock-note { color: #ffd166; }
 
 /* ตาราง — หัวเขียวบนดำ ตัวหนังสือขาว */
 .pixel-theme table.votes th { background: #2fe97a; color: #000000; font-size: 9px; }

@@ -104,6 +104,23 @@ npm run preview    # เสิร์ฟ dist/ ที่ build แล้ว
 
 > บน Windows Vite ถูกตั้งให้ใช้ polling watcher ใน `vite.config.ts` เพื่อหลีกเลี่ยง `EBUSY` เมื่อไฟล์ asset ถูกล็อกชั่วคราว
 
+### ค้นเอกสาร KUB สำหรับฟีเจอร์ staking/unlock
+
+workspace config มี MCP server `kub-docs` ที่ `https://docs.kubchain.com/~gitbook/mcp` สำหรับค้น KUB Docs ทางการ
+ก่อนเพิ่มข้อมูล KUB/GKT stake, NFT stake หรือยอด unlock ต้องหาและตรวจยืนยัน contract address, ABI, event และกติกา unlock
+จาก Docs และ verified source บน Kubscan ก่อนเสมอ ห้ามเดาตัวเลขจาก vote-burn logs
+
+สำหรับ AI ที่ทำงานแบบอ่านไฟล์ ใช้ [`llms.txt`](https://docs.kubchain.com/llms.txt) เป็น page index ที่ใหม่กว่า แล้วเปิดเฉพาะหน้าที่จำเป็น
+หรือรัน `scripts/refresh-kub-docs-index.ps1` เพื่อเก็บ index ไว้ใน `.cache/kub-docs/` ภายในเครื่อง (ไม่ถูก commit)
+ใช้ [`llms-full.txt`](https://docs.kubchain.com/llms-full.txt) เฉพาะกรณีต้องทำงานจาก snapshot offline เพราะเนื้อหาอาจล้าสมัย:
+
+```powershell
+scripts/refresh-kub-docs-index.ps1 -Full
+```
+
+> สถานะ KUB staking analytics: **พักและซ่อนจากหน้า production ชั่วคราว** รอทบทวน data scope/UX ก่อนทำต่อ
+> โดยตรวจยืนยันไว้แล้วว่า gKUB ที่โหวตถูก burn และ verified `GKubToken` source ไม่มี unlock/vesting mechanism
+
 ### Environment variables (ทางเลือกทั้งหมด)
 
 คัดลอก `.env.example` → `.env` แล้วแก้ได้ ไม่มีไฟล์ก็รันได้เพราะมี default:

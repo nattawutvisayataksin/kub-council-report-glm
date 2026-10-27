@@ -64,6 +64,15 @@ Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบ
 | `scripts/gen-pixel-brand-assets.ps1` | สร้าง hero/brand artwork ผ่าน PixelLab; token จาก `PIXELLAB_TOKEN` เท่านั้น |
 | `.vscode/mcp.json` | workspace MCP configuration สำหรับ PixelLab (ใช้ `${env:PIXELLAB_TOKEN}`) |
 | `.github/instructions/pixel-design.instructions.md` | กติกางาน Pixel: ใช้ PixelLab, asset/originality, ห้ามแก้ on-chain logic |
+
+### KUB Docs MCP (เพิ่ม 27 ต.ค. 2026)
+
+- `.vscode/mcp.json` มี server `kub-docs` ชี้ไปที่ `https://docs.kubchain.com/~gitbook/mcp` (public HTTP MCP, ไม่ต้องมี token)
+- สำหรับ AI ที่อ่านไฟล์: ใช้ `https://docs.kubchain.com/llms.txt` เป็น index ก่อน แล้ว fetch เฉพาะหน้าที่เกี่ยวข้อง; `llms-full.txt` เป็น snapshot สำหรับ offline เท่านั้นและอาจไม่ล่าสุด
+- `scripts/refresh-kub-docs-index.ps1` ดาวน์โหลด index ล่าสุดไว้ `.cache/kub-docs/llms.txt` (gitignored); ใส่ `-Full` เพื่อดาวน์โหลด snapshot `.cache/kub-docs/llms-full.txt` เมื่อทำงาน offline และ refresh ก่อนใช้กับข้อมูลที่เปลี่ยนบ่อย
+- ใช้ค้นเอกสารทางการเพื่อหา staking/NFT/unlock contract ก่อนพัฒนาฟีเจอร์ analytics ใหม่
+- Docs เป็นจุดเริ่มค้นหาเท่านั้น: address, ABI, event และ unlock rules ต้องตรวจกับ verified source บน Kubscan อีกชั้น
+- ห้ามเดา stake/unlock จาก `ProposalVoted` หรือ gKUB burn; ต้อง join ตาม wallet หลังรู้ staking contract ที่ถูกต้อง
 | `.github/workflows/deploy.yml` | push main → build → GitHub Pages |
 
 ## 5) รอบนี้ (v1.1) เปลี่ยนอะไรจาก v1.0
@@ -117,14 +126,25 @@ Deploy: `git push origin main` → GH Actions build+pages auto (~2 นาที)
 - Footer ใช้ monogram `V` และชื่อ `VeeNagi` แบบ Pixel typography; ไม่ใช้โลโก้งู
 - ค่า `PIXELLAB_TOKEN` ห้ามเก็บใน markdown, source, หรือ git; ให้ตั้ง environment variable หรือ `scripts/pixellab-token.txt` (ถูก ignore)
 
-## 10) ทำงานต่อด้วย OpenCode
+## 10) KUB staking analytics (PARKED / ซ่อนไว้ก่อน)
+
+- Verified from KUB Docs + Kubscan source:
+  - StakeManager: `0x443502b3F7C0934576F49CDa084f78640f56A80F`
+  - StakeManagerStorage: `0xFd98aac1Fbc57e6BC16A167452DBA7af2B6a4c0d`
+  - Staking NFT: `0x8ae4Cb6a020121bCbD855fffc79A11984bE62B39`
+- ผู้ใช้ขอ **หยุดและซ่อน UI ทั้งหมด** ของ feature นี้ก่อน จึงไม่มี `StakingPanel` หรือคอลัมน์ KUB stake บนหน้า production
+- โค้ด research อยู่ใน `src/config/staking.ts`, `src/lib/staking.ts`, `src/hooks/useValidatorStaking.ts`, และ `src/components/StakingPanel.tsx` เพื่อใช้พิจารณาทำต่อภายหลัง ห้ามเปิดใช้โดยไม่ทบทวน UX/data scope ใหม่
+- Verified `GKubToken` source has no lock/vesting/unlock mechanism; gKUB vote amount is burned, not unlockable.
+- หากกลับมาทำใหม่ ต้องออกแบบ Phase 2 delegator stake ด้วย cache/sync เพราะการอ่าน ValidatorShare ของทุก validator และผู้โหวตจะชน rate limit ได้
+
+## 11) ทำงานต่อด้วย OpenCode
 
 - จุดเริ่มต้นสำหรับ agent/ผู้พัฒนาคนถัดไปคือ `OPENCODE.md`; ให้อ่านไฟล์นี้ควบคู่กับ HANDOFF เสมอ
 - รัน `git status --short` ก่อนแก้ และอย่าลบ untracked Pixel assets โดยไม่ยืนยันจากผู้ใช้
 - ก่อน publish ให้รัน `npm run build`; หากเป็นการเปลี่ยน data/tally ให้รัน `npm run verify` เพิ่ม
 - push `main` จะ deploy ไป GitHub Pages จาก `.github/workflows/deploy.yml`; หลัง push ต้องเช็ค Actions และเว็บจริง
 
-## 11) Git
+## 12) Git
 
 - HEAD เดิม: `a2a28bf` (Pixel palette) — มีงาน Pixel theme/documentation ที่ยังไม่ commit ใน working tree
 - remote: `nattawutvisayataksin/kub-council-report-glm` (main, deploy via Actions)
