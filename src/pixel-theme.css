@@ -1,0 +1,232 @@
+/* ============ PIXEL ARTS VERSION — ธีม retro 16-bit (override styles.css) ============
+   เปิดใช้ด้วยการเพิ่ม class "pixel-theme" ที่ <html> — assets สร้างด้วย PixelLab MCP/API
+   อยู่ใน public/pixel/ */
+
+.pixel-theme {
+  --bg: #0b0f1a;
+  --panel: #141b2e;
+  --panel2: #1a2340;
+  --line: #3b4a7a;
+  --accent: #7dfc4a;
+  --text: #f2f6ff;
+  --muted: #8ea0c9;
+  --warn: #ffcf4a;
+  --bad: #ff5f6e;
+  --good: #7dfc4a;
+  --pixel-border: 4px;
+}
+
+.pixel-theme body,
+.pixel-theme {
+  font-family: "Press Start 2P", "Kanit", monospace;
+  image-rendering: pixelated;
+}
+
+/* bg-tile: Vite resolve url() สัมพัทธ์กับไฟล์ CSS นี้ */
+html.pixel-theme body {
+  background:
+    url("./assets/pixel/bg-tile.png") repeat,
+    var(--bg);
+  background-size: 256px 256px, auto;
+  image-rendering: pixelated;
+}
+
+/* ปุ่ม/ชิป/การ์ด: ขอบเหลี่ยมสไตล์ pixel (box-shadow แทน border-radius) */
+.pixel-theme .card,
+.pixel-theme .stat,
+.pixel-theme .cd-box,
+.pixel-theme .chip,
+.pixel-theme .btn,
+.pixel-theme .banner,
+.pixel-theme .tok-strip,
+.pixel-theme .txf-scroll,
+.pixel-theme .powered {
+  border-radius: 0 !important;
+  border: 3px solid var(--line);
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.06),
+    4px 4px 0 rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+}
+
+.pixel-theme .card {
+  background: linear-gradient(180deg, #16203a 0%, #101728 100%);
+}
+
+.pixel-theme .chip {
+  font-size: 9px;
+  line-height: 1.6;
+  padding: 5px 10px;
+}
+
+.pixel-theme .btn {
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.6;
+  padding: 9px 14px;
+  background: #1d2a4d;
+  text-shadow: 1px 1px 0 #000;
+  transition: none;
+}
+.pixel-theme .btn:hover {
+  background: #27375f;
+  color: var(--accent);
+  transform: translate(-1px, -1px);
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.06),
+    6px 6px 0 rgba(0, 0, 0, 0.5);
+}
+.pixel-theme .btn.primary {
+  background: #1f4d2a;
+  border-color: var(--accent);
+  color: #d9ffbe;
+}
+.pixel-theme .btn.primary:hover { background: #2a6b39; }
+
+/* หัวข้อ/ตัวอักษร */
+.pixel-theme .brand .title { font-size: 14px; line-height: 1.8; text-shadow: 2px 2px 0 #000; }
+.pixel-theme .subtitle { font-size: 9px; line-height: 1.8; }
+.pixel-theme .card h3 { font-size: 11px; line-height: 1.9; }
+.pixel-theme .cat {
+  font-family: inherit; font-size: 8px; border-radius: 0;
+  background: #1f4d2a; border-color: var(--accent); padding: 4px 8px;
+}
+.pixel-theme .pill { border-radius: 0; font-size: 8px; padding: 4px 8px; line-height: 1.5; }
+.pixel-theme .muted, .pixel-theme .l, .pixel-theme .bar-sub { font-size: 9px; line-height: 1.7; }
+.pixel-theme .stat .v { font-size: 14px; text-shadow: 2px 2px 0 #000; }
+.pixel-theme .stat .l { font-size: 8px; }
+.pixel-theme .cd-box .v { font-size: 18px; text-shadow: 2px 2px 0 #000; }
+.pixel-theme .cd-box .l { font-size: 8px; }
+
+/* progress bar เหลี่ยม */
+.pixel-theme .progress,
+.pixel-theme .bar {
+  border-radius: 0;
+  border: 2px solid var(--line);
+  background: #0a0f1e;
+  height: 14px;
+}
+.pixel-theme .progress > span,
+.pixel-theme .bar > span {
+  border-radius: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #4adc1e 0 8px,
+    #7dfc4a 8px 16px
+  );
+  box-shadow: none;
+}
+.pixel-theme .op.leader .bar > span {
+  background: repeating-linear-gradient(90deg, #7dfc4a 0 8px, #d9ff7c 8px 16px);
+}
+.pixel-theme .op.abstain .bar > span { background: #3c4a6e; }
+.pixel-theme .op .rank { border-radius: 0; font-size: 8px; }
+.pixel-theme .op .op-name { font-size: 10px; }
+.pixel-theme .op .tag { border-radius: 0; font-size: 8px; }
+
+/* ตาราง */
+.pixel-theme table.votes th { background: #1a2340; font-size: 9px; }
+.pixel-theme table.votes td { font-size: 9px; line-height: 1.8; }
+.pixel-theme .mono { font-size: 8px; }
+
+/* footer */
+.pixel-theme .powered {
+  font-size: 10px;
+  background: linear-gradient(180deg, #1f4d2a, #14301c);
+  border-color: var(--accent);
+}
+
+/* spinner เป็นบล็อก pixel */
+.pixel-theme .spinner {
+  border-radius: 0;
+  border: 4px solid #1a2340;
+  border-top-color: var(--accent);
+}
+
+/* ---- ปุ่มสลับธีม มุมขวาบนสุด ---- */
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 3px solid var(--line);
+  background: #1d2a4d;
+  color: var(--text);
+  font-family: "Press Start 2P", "Kanit", monospace;
+  font-size: 10px;
+  line-height: 1.5;
+  padding: 10px 14px;
+  cursor: pointer;
+  border-radius: 0;
+  box-shadow:
+    inset -3px -3px 0 rgba(0, 0, 0, 0.35),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.08),
+    4px 4px 0 rgba(0, 0, 0, 0.55);
+  text-shadow: 1px 1px 0 #000;
+  image-rendering: pixelated;
+}
+.theme-toggle:hover {
+  background: #27375f;
+  color: var(--accent);
+  transform: translate(-1px, -1px);
+}
+.theme-toggle img {
+  width: 24px;
+  height: 24px;
+  image-rendering: pixelated;
+}
+
+/* เผื่อที่มุมขวาบนให้ปุ่ม fixed ไม่ทับ header (classic: ข้อความยาวกว่า) */
+.header { padding-right: 300px; }
+.pixel-theme .header { padding-right: 190px; }
+
+/* banner pixel-art ด้านบนของเวอร์ชัน Pixel */
+.pixel-banner {
+  margin: 12px 0 4px;
+  border: 3px solid var(--line);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+  overflow: hidden;
+  line-height: 0;
+}
+.pixel-banner img {
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  display: block;
+}
+
+/* sprite ประดับตามการ์ด */
+.pixel-sprite {
+  image-rendering: pixelated;
+  flex: none;
+}
+.pixel-theme .brand .logo { display: none; }
+.pixel-brand-sprite { display: none; }
+.pixel-theme .pixel-brand-sprite {
+  display: block;
+  width: 56px;
+  height: 56px;
+  image-rendering: pixelated;
+  filter: drop-shadow(3px 3px 0 rgba(0, 0, 0, 0.6));
+  animation: pixel-bob 1.6s steps(2) infinite;
+}
+@keyframes pixel-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* donut เป็นเหลี่ยม */
+.pixel-theme .donut svg circle { shape-rendering: crispEdges; }
+
+@media (max-width: 560px) {
+  .theme-toggle { font-size: 8px; padding: 8px 10px; top: 8px; right: 8px; }
+  .theme-toggle img { width: 18px; height: 18px; }
+  .header,
+  .pixel-theme .header { padding-right: 0; padding-top: 52px; }
+}

@@ -8,7 +8,10 @@ import { TxFeed } from "./components/TxFeed";
 import { WalletTable } from "./components/WalletTable";
 import { ApiFallbackBanner, UnavailableBanner } from "./components/Banners";
 import { Footer } from "./components/Footer";
+import { ThemeToggle } from "./components/ThemeToggle";
+import { PixelBanner } from "./components/PixelBanner";
 import { useElection } from "./hooks/useElection";
+import { useTheme } from "./hooks/useTheme";
 import { useWalletAnalytics } from "./hooks/useWalletAnalytics";
 import { exportDetailCsv, exportSummaryCsv, exportWalletCsv } from "./lib/export";
 
@@ -27,6 +30,8 @@ function LoadingScreen({ first }: { first: boolean }) {
 export default function App() {
   const { loading, model, refreshing, refreshNow } = useElection();
   const wa = useWalletAnalytics(model);
+  const { theme, toggle } = useTheme();
+  const isPixel = theme === "pixel";
 
   const nameOf = useMemo(
     () =>
@@ -37,10 +42,17 @@ export default function App() {
     [model],
   );
 
-  if (loading || !model) return <LoadingScreen first={true} />;
+  if (loading || !model)
+    return (
+      <>
+        <ThemeToggle theme={theme} onToggle={toggle} />
+        <LoadingScreen first={true} />
+      </>
+    );
   if (model.mode === "unavailable") {
     return (
       <div className="app">
+        <ThemeToggle theme={theme} onToggle={toggle} />
         <Header model={model} refreshing={refreshing} refreshNow={refreshNow} />
         <UnavailableBanner onRetry={refreshNow} />
       </div>
@@ -49,6 +61,8 @@ export default function App() {
 
   return (
     <div className="app">
+      <ThemeToggle theme={theme} onToggle={toggle} />
+      {isPixel && <PixelBanner />}
       <Header model={model} refreshing={refreshing} refreshNow={refreshNow} />
       {model.mode === "api-fallback" && (
         <ApiFallbackBanner apiUpdatedAt={model.apiUpdatedAt} apiFetchedAtMs={model.apiFetchedAtMs} />

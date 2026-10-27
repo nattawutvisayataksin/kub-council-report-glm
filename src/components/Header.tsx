@@ -3,6 +3,7 @@ import { fmtAgoSeconds, shortAddr } from "../lib/format";
 import { explorerAddrUrl } from "../config/chain";
 import { GKUB_TOKEN } from "../config/election";
 import type { ElectionModel } from "../lib/election";
+import ballotBox from "../assets/pixel/ballot-box.png";
 
 interface Props {
   model: ElectionModel;
@@ -18,6 +19,7 @@ export function Header({ model, refreshing, refreshNow }: Props) {
     <header className="header">
       <div className="brand">
         <span className="logo">🗳️</span>
+        <img className="pixel-brand-sprite" src={ballotBox} alt="" width={56} height={56} />
         <div>
           <div className="title">KUB Community Council Election — Round 2</div>
           <div className="subtitle">
