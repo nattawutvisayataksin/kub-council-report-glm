@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-label="KUB Community Council pixel art banner" preserveAspectRatio="xMidYMid slice">
+  <rect width="1200" height="280" fill="#10251e"/>
+  <path fill="#16352a" d="M0 48h72v16h48v-16h96v32h64v16h80v-32h80v48h64v-16h96v32h72v-16h96v48h80v-32h80v16h112v-48h80v32h48v-16h88v128H0z"/>
+  <path fill="#1e513d" d="M0 208h104v-20h72v20h96v-36h88v36h96v-20h120v20h80v-36h112v36h88v-20h104v20h96v-28h104v100H0z"/>
+  <g fill="#2fe97a"><rect x="84" y="56" width="12" height="12"/><rect x="180" y="108" width="8" height="8"/><rect x="344" y="42" width="10" height="10"/><rect x="892" y="68" width="12" height="12"/><rect x="1080" y="116" width="8" height="8"/><rect x="1024" y="48" width="10" height="10"/></g>
+  <g transform="translate(522 40)">
+    <rect x="0" y="0" width="160" height="160" fill="#07110d"/>
+    <path fill="#eafff1" d="M32 16h96v16h16v32h-16v16H96v16h32v16h16v32h-16v16H32v-16H16v-32h16V96h32V80H32V64H16V32h16zm0 16v32h32v16h32V64h32V32z"/>
+    <path fill="#2fe97a" d="M32 32h32v16h32V32h32v32H96v16H64V64H32zm0 80h32V96h32v16h32v32H32z"/>
+    <path fill="#97ffbd" d="M64 48h16v32H64zm16 48h16v16H80z"/>
+  </g>
+  <g fill="#eafff1" font-family="monospace" font-weight="bold" text-anchor="middle"><text x="600" y="230" font-size="22" letter-spacing="5">KUB COMMUNITY COUNCIL</text><text x="600" y="258" font-size="12" letter-spacing="3" fill="#97ffbd">ON-CHAIN ELECTION • ROUND 2</text></g>
+</svg>

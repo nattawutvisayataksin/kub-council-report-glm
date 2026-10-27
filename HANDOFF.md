@@ -1,6 +1,6 @@
 # 📋 HANDOFF — KUB Council Report GLM (สามารถอ่านไฟล์นี้เดียวแล้วทำต่อได้)
 
-> อัปเดตล่าสุด: 2026-10-26 · สถานะ: v1.1 deploy บน GitHub Pages แล้ว ✓
+> อัปเดตล่าสุด: 2026-10-27 · สถานะ: v1.1 + Pixel theme อยู่ใน working tree (ต้อง commit/push เพื่อ deploy)
 > URL: https://nattawutvisayataksin.github.io/kub-council-report-glm/
 
 ---
@@ -59,6 +59,11 @@ Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบ
 | `src/hooks/useCountdown.ts` | นาฬิกาวินาที (UI only) |
 | `src/components/*` | Header, CountdownCard, SummaryStrip (stat+3 export), **StatsPanel (donut+timeline SVG เอง)**, ProposalCard, **TxFeed (ปุ่มแสดงทั้งหมด + เรียงคอลัมน์)**, **WalletTable (analytics+ยอดกระเป๋า+expand+เรียง)**, SortTh (หัวตารางเรียงได้ ใช้ร่วม), Banners, Footer |
 | `scripts/verify.ts` | `npm run verify` = พิสูจน์ end-to-end (exit 1 ถ้าเลขไม่ตรง API) |
+| `src/pixel-theme.css` | Pixel Arts override: surfaces/typography/donut legend/footer branding |
+| `src/assets/pixel/` | PixelLab-generated hero (`kub-pixel-party-banner.png`), KUB wordmark และภาพประกอบ Pixel |
+| `scripts/gen-pixel-brand-assets.ps1` | สร้าง hero/brand artwork ผ่าน PixelLab; token จาก `PIXELLAB_TOKEN` เท่านั้น |
+| `.vscode/mcp.json` | workspace MCP configuration สำหรับ PixelLab (ใช้ `${env:PIXELLAB_TOKEN}`) |
+| `.github/instructions/pixel-design.instructions.md` | กติกางาน Pixel: ใช้ PixelLab, asset/originality, ห้ามแก้ on-chain logic |
 | `.github/workflows/deploy.yml` | push main → build → GitHub Pages |
 
 ## 5) รอบนี้ (v1.1) เปลี่ยนอะไรจาก v1.0
@@ -90,6 +95,8 @@ npm run verify         # พิสูจน์เลขเทียบ API (จ�
 npm run preview        # ทดลอง dist
 ```
 
+Windows note: `vite.config.ts` เปิด polling watcher เพราะ native watcher อาจล้มด้วย `EBUSY` เมื่อไฟล์ภาพใน `src/assets/pixel/` ถูกล็อกชั่วคราว
+
 Deploy: `git push origin main` → GH Actions build+pages auto (~2 นาที)
 ตรวจว่าเว็บ live update จริง: ดูชื่อไฟล์ asset ใน index.html เทียบกับ build ล่าสุด
 
@@ -102,8 +109,23 @@ Deploy: `git push origin main` → GH Actions build+pages auto (~2 นาที)
 - [ ] เสียง/แจ้งเตือน เมื่อมีโหวตใหม่
 - [ ] Refund table เรียงได้ด้วย (ปุ่มแสดงทั้งหมด refunds)
 
-## 9) Git
+## 9) Pixel theme (อัปเดต 27 ต.ค. 2026)
 
-- ล่าสุด: `5cdf149` (อัปเดต UI: show-all + sort) · commit ก่อนหน้า `2ba1f1d` (analytics+token+กราฟ)
+- เปิดธีมด้วย class `pixel-theme` บน `<html>` ผ่าน `useTheme`; ไม่แตะ data/tally logic
+- Hero ปัจจุบันต้องเป็น artwork PixelLab ที่มีผู้ชาย adult **5 คนเท่านั้น**; หาก output ไม่ตรง ให้สร้างใหม่ด้วย prompt ที่ระบุจำนวนชัดเจน
+- KUB ใช้ wordmark Pixel ที่ออกแบบใน `src/assets/pixel/kub-wordmark.svg` สำหรับ header และปุ่มธีม
+- Footer ใช้ monogram `V` และชื่อ `VeeNagi` แบบ Pixel typography; ไม่ใช้โลโก้งู
+- ค่า `PIXELLAB_TOKEN` ห้ามเก็บใน markdown, source, หรือ git; ให้ตั้ง environment variable หรือ `scripts/pixellab-token.txt` (ถูก ignore)
+
+## 10) ทำงานต่อด้วย OpenCode
+
+- จุดเริ่มต้นสำหรับ agent/ผู้พัฒนาคนถัดไปคือ `OPENCODE.md`; ให้อ่านไฟล์นี้ควบคู่กับ HANDOFF เสมอ
+- รัน `git status --short` ก่อนแก้ และอย่าลบ untracked Pixel assets โดยไม่ยืนยันจากผู้ใช้
+- ก่อน publish ให้รัน `npm run build`; หากเป็นการเปลี่ยน data/tally ให้รัน `npm run verify` เพิ่ม
+- push `main` จะ deploy ไป GitHub Pages จาก `.github/workflows/deploy.yml`; หลัง push ต้องเช็ค Actions และเว็บจริง
+
+## 11) Git
+
+- HEAD เดิม: `a2a28bf` (Pixel palette) — มีงาน Pixel theme/documentation ที่ยังไม่ commit ใน working tree
 - remote: `nattawutvisayataksin/kub-council-report-glm` (main, deploy via Actions)
 - เหลือไฟล์ชั่วคราวเว้นหน้า repo: none (ทดสอบอ่าน token อ่านแล้วลบ)

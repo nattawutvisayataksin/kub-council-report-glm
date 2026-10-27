@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 216 64" role="img" aria-label="KUB">
+  <rect width="216" height="64" fill="#07110d"/>
+  <path fill="#2fe97a" d="M8 8h12v16h8V16h12v8h8v16h-8v8H28v-8h-8v16H8V8zm12 24v8h8v-8h-8zM56 8h12v36h8V8h12v36h-8v12H64V44h-8V8zm40 0h32v8h8v16h-8v8h8v16H96V8zm12 12v12h12V20h-12zm0 24v12h12V44h-12z"/>
+  <path fill="#eafff1" d="M20 8h8v16h-8zm48 0h8v36h-8zm40 0h12v12h-12zm0 36h12v12h-12z"/>
+  <rect x="144" y="12" width="4" height="40" fill="#97ffbd"/>
+  <rect x="156" y="12" width="4" height="40" fill="#97ffbd"/>
+  <rect x="168" y="12" width="4" height="40" fill="#97ffbd"/>
+  <rect x="180" y="12" width="4" height="40" fill="#97ffbd"/>
+  <rect x="192" y="12" width="4" height="40" fill="#97ffbd"/>
+</svg>

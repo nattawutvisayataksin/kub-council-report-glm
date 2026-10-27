@@ -15,7 +15,7 @@ import {
 } from "../lib/analytics";
 import { fmtDateTimeShort, fmtNum, weiToGkubString } from "../lib/format";
 
-const DONUT_COLORS = ["#2fe97a", "#35f08a", "#7ce3b0", "#57c9ff", "#b6ff7c", "#ffd166"];
+const DONUT_COLORS = ["#2fe97a", "#ffffff", "#ffd166", "#65cfff", "#f58bb9", "#a98cff"];
 
 // ---------------------------------------------------------------- donut
 
@@ -26,7 +26,7 @@ function DistributionDonut({
   totals: ProposalTotal[];
   sumWei: bigint;
 }) {
-  const R = 56;
+  const R = 64;
   const C = 2 * Math.PI * R;
   const segs: { color: string; len: number; start: number }[] = [];
   let acc = 0;
@@ -48,7 +48,7 @@ function DistributionDonut({
             r={R}
             fill="none"
             stroke="#10241a"
-            strokeWidth="16"
+            strokeWidth="12"
           />
           {segs.map((s, i) => (
             <circle
@@ -58,7 +58,7 @@ function DistributionDonut({
               r={R}
               fill="none"
               stroke={s.color}
-              strokeWidth="16"
+              strokeWidth="12"
               strokeLinecap="butt"
               strokeDasharray={`${s.len} ${C - s.len}`}
               strokeDashoffset={-s.start}
@@ -67,8 +67,9 @@ function DistributionDonut({
           ))}
         </svg>
         <div className="donut-center">
+          <div className="donut-kicker">TOTAL BURN</div>
           <div className="v">{sumWei > 0n ? fmtNum(weiToGkubString(sumWei)) : "—"}</div>
-          <div className="l">gKUB เผารวมทุก 5 หมวด</div>
+          <div className="donut-unit">gKUB</div>
         </div>
       </div>
       <ul className="legend">

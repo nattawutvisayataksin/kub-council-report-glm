@@ -1,4 +1,3 @@
-import ballotBox from "../assets/pixel/ballot-box.png";
 import type { ThemeMode } from "../hooks/useTheme";
 
 interface Props {
@@ -15,8 +14,7 @@ export function ThemeToggle({ theme, onToggle }: Props) {
       onClick={onToggle}
       title={toPixel ? "สลับไปเวอร์ชัน Pixel Arts" : "กลับเวอร์ชันเดิม"}
     >
-      <img src={ballotBox} alt="" width={24} height={24} />
-      {toPixel ? "Click to Pixel Version" : "CLASSIC"}
+      {toPixel ? "Click to Pixel Version" : "Click to Classic Version"}
     </button>
   );
 }

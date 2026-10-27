@@ -155,9 +155,10 @@ export function WalletTable({
           </span>
         )}
         {preVoteWei != null && (
-          <span className="wal-chip accent">
-            เผาเพื่อโหวต: <b>{fmtNum(weiToGkubString(burnedWei))}</b> (≈
-            {fmtNum(burnedPctOfPre ?? 0, 4)}% ของยอดก่อนโหวต)
+          <span className="wal-chip accent burn-summary">
+            <span className="burn-label">เผาเพื่อโหวต</span>
+            <b>{fmtNum(weiToGkubString(burnedWei))}</b>
+            <small>≈ {fmtNum(burnedPctOfPre ?? 0, 4)}% ของยอดก่อนโหวต</small>
           </span>
         )}
         {tokenInfo != null && tokenInfo.decimals !== 18 && (
@@ -241,7 +242,7 @@ export function WalletTable({
                         <span className="wal-cats">
                           {w.proposalIds.map((pid) => (
                             <span className="wal-catchip" key={pid}>
-                              #{pid} {SHORT_CAT[pid] ?? ""}
+                              <small>#{pid}</small> {SHORT_CAT[pid] ?? ""}
                             </span>
                           ))}
                         </span>

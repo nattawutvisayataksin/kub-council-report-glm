@@ -1,6 +1,6 @@
 import { useNowTick } from "../hooks/useCountdown";
 import type { ProposalModel } from "../lib/election";
-import { fmtDateTimeShort, fmtNum, weiToGkubString } from "../lib/format";
+import { fmtNum, weiToGkubString } from "../lib/format";
 
 function statusOf(p: ProposalModel, nowMs: number): { label: string; cls: string } {
   const notEnded = nowMs < p.endTs * 1000;
@@ -44,7 +44,6 @@ export function ProposalCard({ p }: { p: ProposalModel }) {
               <div className="bar-head">
                 <span className="rank">#{i + 1}</span>
                 <span className="op-name">{o.name}</span>
-                {o.isAbstain && <em className="tag">abstain</em>}
                 <span className="op-votes">
                   {fmtNum(weiToGkubString(o.votesWei))}
                   <small>gKUB</small>
@@ -84,8 +83,6 @@ export function ProposalCard({ p }: { p: ProposalModel }) {
       </div>
 
       <div className="times">
-        <span>เปิด {fmtDateTimeShort(p.startTs)}</span>
-        <span>ปิด {fmtDateTimeShort(p.endTs)}</span>
         {p.tallyMatchesView === true && <span className="pill ok">ตรงกับ state บนเชน ✓</span>}
         {p.tallyMatchesApi === true && <span className="pill ok">ตรงกับ /api/votes ✓</span>}
         {p.tallyMatchesApi === false && <span className="pill warn">คลาดเคลื่อนกับ /api/votes</span>}

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-label="Five pixel-art KUB council adventurers" preserveAspectRatio="xMidYMid slice">
+  <rect width="1200" height="280" fill="#10251e"/>
+  <path fill="#16352a" d="M0 55h100v18h60v-18h90v32h100v-25h80v36h88v-21h95v30h95v-36h90v22h90v-27h110v38h85v-24h78v36h96v126H0z"/>
+  <path fill="#1e513d" d="M0 225h90v-20h72v20h80v-34h95v34h80v-20h90v20h78v-34h100v34h83v-20h96v20h85v-30h101v85H0z"/>
+  <g fill="#2fe97a"><rect x="68" y="65" width="10" height="10"/><rect x="155" y="115" width="8" height="8"/><rect x="280" y="42" width="11" height="11"/><rect x="930" y="56" width="10" height="10"/><rect x="1100" y="98" width="8" height="8"/></g>
+  <!-- original five-member fantasy adventurer party -->
+  <g stroke="#07110d" stroke-width="6" stroke-linejoin="miter">
+    <g transform="translate(155 92)"><path fill="#2fe97a" d="M18 0h36v12h12v30H6V12h12z"/><path fill="#eafff1" d="M18 26h36v29H18z"/><path fill="#ffd166" d="M10 55h52v40H10z"/><path fill="#97ffbd" d="M18 95h15v40H18zm22 0h15v40H40z"/><rect fill="#07110d" x="27" y="31" width="7" height="7"/><rect fill="#07110d" x="42" y="31" width="7" height="7"/></g>
+    <g transform="translate(345 77)"><path fill="#a98cff" d="M18 0h38v13h12v33H6V13h12z"/><path fill="#eafff1" d="M18 28h38v31H18z"/><path fill="#f58bb9" d="M9 59h56v42H9z"/><path fill="#97ffbd" d="M18 101h16v38H18zm23 0h16v38H41z"/><rect fill="#07110d" x="27" y="34" width="7" height="7"/><rect fill="#07110d" x="44" y="34" width="7" height="7"/></g>
+    <g transform="translate(536 52)"><path fill="#ffd166" d="M18 0h40v14h12v36H6V14h12z"/><path fill="#eafff1" d="M18 31h40v32H18z"/><path fill="#2fe97a" d="M7 63h62v47H7z"/><path fill="#97ffbd" d="M18 110h17v48H18zm24 0h17v48H42z"/><path fill="#ffd166" d="M70 68h18v12h-18z"/><rect fill="#07110d" x="28" y="37" width="7" height="7"/><rect fill="#07110d" x="46" y="37" width="7" height="7"/></g>
+    <g transform="translate(740 77)"><path fill="#65cfff" d="M18 0h38v13h12v33H6V13h12z"/><path fill="#eafff1" d="M18 28h38v31H18z"/><path fill="#a98cff" d="M9 59h56v42H9z"/><path fill="#97ffbd" d="M18 101h16v38H18zm23 0h16v38H41z"/><rect fill="#07110d" x="27" y="34" width="7" height="7"/><rect fill="#07110d" x="44" y="34" width="7" height="7"/></g>
+    <g transform="translate(930 92)"><path fill="#f58bb9" d="M18 0h36v12h12v30H6V12h12z"/><path fill="#eafff1" d="M18 26h36v29H18z"/><path fill="#65cfff" d="M10 55h52v40H10z"/><path fill="#97ffbd" d="M18 95h15v40H18zm22 0h15v40H40z"/><rect fill="#07110d" x="27" y="31" width="7" height="7"/><rect fill="#07110d" x="42" y="31" width="7" height="7"/></g>
+  </g>
+</svg>

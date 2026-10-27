@@ -9,6 +9,8 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 > แล้ว cross-check กับ API อย่างเป็นทางการ (`kubcouncil.vercel.app/api/votes`) ทุกรอบ
 > (อัปเดตอัตโนมัติทุก ~15 วินาที)
 
+> ดูคู่มือทำงานต่อด้วย OpenCode ที่ [`OPENCODE.md`](./OPENCODE.md) และสรุปสถานะเชิงเทคนิคที่ [`HANDOFF.md`](./HANDOFF.md)
+
 ---
 
 ## โปรเจกต์นี้ "ยืนยันได้" อย่างไร (verification trail)
@@ -78,7 +80,8 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 - Export CSV สามไฟล์: *ผลสรุป* ต่อ (ข้อ, ตัวเลือก) / *ทุกธุรกรรมโหวต* / *ต่อผู้โหวต* (มี tx hash + URL)
 - รายการธุรกรรมโหวตล่าสุด (block time, ผู้โหวต, ผู้สมัคร, คะแนน, link kubscan)
 - สถานะ RPC, block number ล่าสุด, อัปเดตล่าสุดเมื่อ x วินาทีก่อน, badge cross-check
-- ธีมลุค dark/neon-green แนว kubcouncil ฟอนต์ Kanit responsive both desktop/mobile
+- ธีม classic dark/neon-green และธีม **Pixel Arts** ที่สลับจากปุ่มมุมขวาบน (จำค่าไว้ใน browser)
+- ธีม Pixel ใช้ artwork ที่สร้างด้วย PixelLab: hero banner นักผจญภัยชาย 5 คน, wordmark KUB และ creator credit ของ VeeNagi
 
 ## รันเอง
 
@@ -89,6 +92,17 @@ npm run build      # typecheck + build → dist/
 npm run verify     # พิสูจน์ end-to-end: อ่านเชนจริง + เทียบ /api/votes (ถ้าไม่ผ่านจะ exit 1)
 npm run preview    # เสิร์ฟ dist/ ที่ build แล้ว
 ```
+
+### ออกแบบ Pixel artwork (PixelLab)
+
+- การตั้งค่า MCP ของ workspace อยู่ที่ `.vscode/mcp.json` และอ่าน credential จาก environment variable `PIXELLAB_TOKEN` เท่านั้น
+  (ห้าม commit token)
+- กติกาและขอบเขตงานภาพอยู่ที่ `.github/instructions/pixel-design.instructions.md`
+- สร้าง artwork ซ้ำ: `scripts/gen-pixel-brand-assets.ps1` (logo/hero) หรือ
+  `scripts/gen-pixel-party-banner.ps1` (hero อย่างเดียว) โดยต้องกำหนด `PIXELLAB_TOKEN` ก่อน
+- Asset ที่ใช้งานจริงเก็บใน `src/assets/pixel/`; งานภาพต้องไม่แก้ logic อ่านเชนหรือเพิ่ม RPC concurrency
+
+> บน Windows Vite ถูกตั้งให้ใช้ polling watcher ใน `vite.config.ts` เพื่อหลีกเลี่ยง `EBUSY` เมื่อไฟล์ asset ถูกล็อกชั่วคราว
 
 ### Environment variables (ทางเลือกทั้งหมด)
 
@@ -154,6 +168,9 @@ netlify deploy --build --prod
 ```
 Kub-Council-Report-GLM/
 ├─ scripts/verify.ts        # พิสูจน์ end-to-end (npm run verify)
+├─ scripts/gen-pixel-*.ps1  # สร้าง artwork PixelLab ซ้ำ (ใช้ PIXELLAB_TOKEN)
+├─ .vscode/mcp.json         # PixelLab MCP config (token ผ่าน environment variable)
+├─ .github/instructions/    # กติกาการออกแบบ Pixel-theme
 ├─ src/
 │  ├─ components/           # Header, Countdown, StatsPanel (donut+timeline), ProposalCard, TxFeed, WalletTable, Banners, Footer
 │  ├─ hooks/useElection.ts  # polling 15 วิ + incremental scan
@@ -169,6 +186,7 @@ Kub-Council-Report-GLM/
 │  │  ├─ export.ts / csv.ts # CSV สามแบบ (ผลสรุป / ธุรกรรมโหวต / ต่อผู้โหวต)
 │  ├─ config/chain.ts       # KUB Chain (viem) + explorer helpers
 │  ├─ config/election.ts    # contract/gKUB/ABI + **ข้อมูลยืนยัน** (อ่าน comment ข้างใน)
-│  ├─ App.tsx / main.tsx / styles.css
+│  ├─ assets/pixel/         # PixelLab artwork + KUB/VeeNagi wordmarks
+│  ├─ App.tsx / main.tsx / styles.css / pixel-theme.css
 ├─ index.html · vite.config.ts · tsconfig.json · netlify.toml · .env.example
 ```

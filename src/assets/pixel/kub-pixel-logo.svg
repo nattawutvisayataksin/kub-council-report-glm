@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="KUB pixel mark">
+  <rect width="96" height="96" fill="#10251e"/>
+  <path fill="#07110d" d="M16 8h64v8h8v64h-8v8H16v-8H8V16h8z"/>
+  <path fill="#eafff1" d="M24 16h48v8h8v16h-8v8H56v8h16v8h8v16h-8v8H24v-8h-8V64h8v-8h16v-8H24v-8h-8V24h8z"/>
+  <path fill="#2fe97a" d="M24 24h16v8h8v-8h24v16H56v8H40V40H24zm0 40h16v-8h16v8h16v16H24z"/>
+  <path fill="#97ffbd" d="M40 32h8v16h-8zm8 24h8v8h-8z"/>
+</svg>
