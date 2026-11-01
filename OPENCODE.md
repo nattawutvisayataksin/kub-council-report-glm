@@ -30,7 +30,7 @@ npm run verify
 ```
 
 - The Vite watcher uses polling in `vite.config.ts` to avoid Windows `EBUSY` asset locks.
-- `npm run verify` calls the public RPC and API. It can take time and must not be changed to concurrent balance reads.
+- `npm run verify` calls the public RPC and validates vote-log tallies against on-chain proposal state. It can take time and must not be changed to concurrent balance reads.
 
 ## Pixel-theme work
 

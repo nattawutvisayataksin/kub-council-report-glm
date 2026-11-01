@@ -5,9 +5,8 @@ import { weiToGkubString } from "./format";
 
 const stamp = () => new Date().toISOString().slice(0, 10);
 
-/** CSV 1: สรุปผลต่อ (ข้อ, ตัวเลือก) — ค่าทั้งหมดมาจาก on-chain (ยกเว้นโหมด api-fallback ที่ระบุไว้ในคอลัมน์ source) */
+/** CSV 1: สรุปผลต่อ (ข้อ, ตัวเลือก) — ค่าทั้งหมดมาจาก on-chain โดยตรวจสอบผ่าน Block Chain (tallyMatchesView) */
 export function summaryRows(model: ElectionModel): Array<Record<string, string | number>> {
-  const source = model.mode === "live" ? "on-chain" : "api-snapshot";
   const out: Array<Record<string, string | number>> = [];
   for (const p of model.proposals) {
     for (const o of p.options) {
@@ -26,8 +25,8 @@ export function summaryRows(model: ElectionModel): Array<Record<string, string |
         min_quorum_gkub: weiToGkubString(p.minQuorumWei),
         quorum_met: p.quorumMet ? "yes" : "no",
         status: p.completed ? "completed" : p.closed ? "closed" : "active",
-        matches_official_api: model.crossCheckOk == null ? "unknown" : model.crossCheckOk ? "yes" : "no",
-        data_source: source,
+        matches_onchain_state: p.tallyMatchesView ? "yes" : "no",
+        data_source: "on-chain",
         captured_at_utc: new Date(model.fetchedAtMs).toISOString(),
       });
     }
@@ -52,7 +51,7 @@ export function detailRows(model: ElectionModel): Array<Record<string, string | 
       amount_gkub: weiToGkubString(v.amountWei),
       tx_hash: v.txHash,
       tx_url: `https://kubscan.com/tx/${v.txHash}`,
-      data_source: model.mode === "live" ? "on-chain ProposalVoted" : "api-snapshot",
+      data_source: "on-chain ProposalVoted",
     };
   });
 }

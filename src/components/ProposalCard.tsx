@@ -93,8 +93,6 @@ export function ProposalCard({ p }: { p: ProposalModel }) {
 
       <div className="times">
         {p.tallyMatchesView === true && <span className="pill ok">{t("pc.matchView")}</span>}
-        {p.tallyMatchesApi === true && <span className="pill ok">{t("pc.matchApi")}</span>}
-        {p.tallyMatchesApi === false && <span className="pill warn">{t("pc.mismatchApi")}</span>}
       </div>
     </section>
   );

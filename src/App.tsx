@@ -6,7 +6,7 @@ import { StatsPanel } from "./components/StatsPanel";
 import { ProposalCard } from "./components/ProposalCard";
 import { TxFeed } from "./components/TxFeed";
 import { WalletTable } from "./components/WalletTable";
-import { ApiFallbackBanner, UnavailableBanner } from "./components/Banners";
+import { UnavailableBanner } from "./components/Banners";
 import { Footer } from "./components/Footer";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { PixelBanner } from "./components/PixelBanner";
@@ -17,17 +17,11 @@ import { useLang } from "./i18n";
 import { t } from "./i18n/dict";
 import { exportDetailCsv, exportSummaryCsv, exportWalletCsv } from "./lib/export";
 
-function LoadingScreen({ first }: { first: boolean }) {
+function LoadingScreen(_props: { first: boolean }) {
   return (
     <div className="loading">
       <div className="spinner" />
-      <div>{first ? t("loading-first") : t("loading-refresh")}</div>
-      <div className="muted" style={{ fontSize: 12 }}>
-        {t("loading-sub")}
-      </div>
-      <div className="muted" style={{ fontSize: 12, maxWidth: 340, textAlign: "center" }}>
-        {t("loading-firstvisit")}
-      </div>
+      <div>{t("loading-first")}</div>
     </div>
   );
 }
@@ -73,9 +67,6 @@ export default function App() {
       <ThemeToggle theme={theme} onToggle={toggle} />
       {isPixel && <PixelBanner />}
       <Header model={model} refreshing={refreshing} refreshNow={refreshNow} />
-      {model.mode === "api-fallback" && (
-        <ApiFallbackBanner apiUpdatedAt={model.apiUpdatedAt} apiFetchedAtMs={model.apiFetchedAtMs} />
-      )}
 
       <main>
         <CountdownCard />

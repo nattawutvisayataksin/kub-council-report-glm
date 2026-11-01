@@ -9,9 +9,9 @@
 Dashboard เกาะติด **ผลโหวตจริงจากบล็อกเชน** ของ **KUB Community Council Election Round 2**
 บน KUB Chain Mainnet (Chain ID **96**) — read-only 100% ไม่ผูกกระเป๋าเงิน ไม่มี API key
 
-> ตัวเลขทุกตัวบนหน้าเว็บมาจาก `ProposalVoted` logs ของ contract จริง + view calls
-> แล้ว cross-check กับ API อย่างเป็นทางการ (`kubcouncil.vercel.app/api/votes`) ทุกรอบ
-> (อัปเดตอัตโนมัติทุก ~15 วินาที)
+> ตัวเลขทุกตัวบนหน้าเว็บมาจาก `ProposalVoted` logs และ view calls บนเชนจริง
+> ระบบแสดงผลเมื่ออ่านข้อมูลครบและ tally จาก logs ตรงกับ state บนเชนเท่านั้น
+> ไม่มีการบันทึกผลเลือกตั้งลงเครื่อง; เปิดหน้าใหม่จะสแกนใหม่ และอัปเดตต่อจาก block ล่าสุดในหน่วยความจำ
 
 > ดูคู่มือทำงานต่อด้วย OpenCode ที่ [`OPENCODE.md`](./OPENCODE.md) และสรุปสถานะเชิงเทคนิคที่ [`HANDOFF.md`](./HANDOFF.md)
 
@@ -24,9 +24,9 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 | 1 | Contract ผลโหวต | `0x5aF70a51ddbb02e717540Dcda351706a1589F5B1` (`GKubProposalV2`) | kubscan `getsourcecode` (compiler v0.8.17, optimization 20000, IsProxy=false) + เป็น owner ทุก proposal ของรอบนี้ |
 | 2 | gKUB vote token | `0x5848718437583e7a086c97836344aa43bfa55dab` | ผ่าน 3 ชั้น: ① constructor args (kubscan) ② receipt ของ tx โหวตจริงแสดง KAP20 `Transfer(user → address(0))` จาก contract นี้ ③ source ของ `voteProposal` เรียก `voteToken.burn(user, amount)` |
 | 3 | event คะแนน | `ProposalVoted(proposalId, choice, user, gKubAmount)` topic0 = `0xf3801d77e9bff0fe5c3de5dfbdbe6cf3d04bb3e22005abfe7bf389dc78476fd1` | ตรวจจาก log จริง 24 events ในช่วงเลือกตั้ง (แอปยัง re-derive จาก ABI ตอนรันด้วย viem อัตโนมัติ) |
-| 4 | ช่วงเลือกตั้ง | เริ่ม `1792558800` (21 ต.ค. 2026 12:00 น. ICT) → ปิด `1794286800` (10 พ.ย. 2026 12:00 น. ICT) | `createProposal` args บนเชน + `/api/votes` |
+| 4 | ช่วงเลือกตั้ง | เริ่ม `1792558800` (21 ต.ค. 2026 12:00 น. ICT) → ปิด `1794286800` (10 พ.ย. 2026 12:00 น. ICT) | `createProposal` args บนเชน |
 | 5 | anchor block | proposals 15–19 ถูกสร้าง block `36255246–36255256`, เริ่มโหวต ~block `36306869` | binary search timestamps + kubscan txlist |
-| 6 | คะแนน | tally ต่อ (proposal, choice) **ตรงกับ /api/votes เป๊ะทุกตัว** + ตรงกับ `getProposalInfoById().choiceVoted` (state บนเชน) | `scripts/verify.ts` (`npm run verify`) — ผลรวม ณ 22 ต.ค. 2026: 119 / 278.33 / 106 / 141.7737 / 81 gKUB |
+| 6 | คะแนน | tally ต่อ (proposal, choice) ตรวจเทียบกับ `getProposalInfoById().choiceVoted` (state บนเชน) ทุกครั้ง | `scripts/verify.ts` (`npm run verify`) — exit 1 หากข้อมูลไม่ครบหรือไม่ตรง; ณ 1 พ.ย. 2026: 90 tx / 28 wallets / 7,297.8114 gKUB |
 
 ### ทำไม tally = ผลรวม `ProposalVoted` ได้เลย
 
@@ -34,14 +34,13 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
   ทั้งโครงสร้าง (มีแต่ `+=` ใน `voteProposal`) — withdrawal (`withdrawVoteToken`) แค่คืน token
   และ mark `isWithdraw` ไม่กระทบคะแนนบนเชน
 - การโหวต "เผา" gKUB (`voteToken.burn`) ทำให้คะแนนเป็น additive จริง ย้อนเป็น replay ได้แน่นอน
-- แอปจึงใช้ **ผลรวม events** และ **view state** ไปทางเดียวกัน — และแจ้ง `.tallyMatchesView`/`.tallyMatchesApi`
-  ต่อข้อเป็น badge บนหน้าเว็บ
+- แอปจึงใช้ **ผลรวม events** และ **view state** ไปทางเดียวกัน — แสดง badge `.tallyMatchesView`
+  และไม่แสดงหน้าผลคะแนนหากอ่าน state ไม่ครบหรือพบยอดไม่ตรง
 
 ### ชื่อผู้สมัคร
 
-ชื่อจริงของผู้สมัครอยู่ใน `/api/votes` (cross-validated ว่า **index ของ choice บนเชน == index ของ options**
-ใน API — พิสูจน์ด้วย numOfChoice 4 ของข้อ #16 และตัวเลข per option ที่ตรงกันทั้ง 5 ข้อ)
-ถ้า API ล่มขณะ RPC ยังอยู่ แอปจะแสดงแฟลลแบ็กข้อความ `ตัวเลือก N` แทน ไม่เดาชื่อ
+ชื่อผู้สมัครฝังไว้ใน `VERIFIED_CANDIDATE_NAMES` หลังตรวจ index ของ choice กับ state บนเชนแล้ว
+หากไม่มีชื่อที่ยืนยัน แอปจะแสดง `ตัวเลือก N` แทน ไม่เดาชื่อจากแหล่งภายนอก
 
 ---
 
@@ -57,17 +56,16 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
                                 ▼
               ElectionModel { proposals, votes[], refunds[], uniqueVoters … }
                                 ▲
-                                │ cross-check (ชื่อผู้สมัคร + เทียบตัวเลข)
-              https://kubcouncil.vercel.app/api/votes
+                                │ verify: tally logs == on-chain choiceVoted
                                 ▼
         React UI: countdown, การ์ด 5 หมวด + กราฟแท่ง, donut/timeline stats,
         Analytics ต่อกระเป๋า (คะแนนเผา + balanceOf), ธุรกรรมล่าสุด, Export CSV ×3, RPC status+block
 ```
 
 - **initial scan**: จาก block `36255000` → latest (~22 chunks ของ 4000 บล็อก)
-- **incremental poll ทุก 15 วิ**: สแกนเฉพาะเงา block ใหม่ ต่อจาก scan ล่าสุด (เร็ว ประหยัด RPC)
-- **โหมด fallback**: ถ้า RPC ล่ม → ใช้ API snapshot (มี banner เหลืองระบุที่มา+timestamp) ถ้า API ก็ล่มด้วย →
-  banner แดง + ปุ่ม retry (ไม่มี mock data หลอก)
+- **อัปเดตแบบ incremental**: สแกนเฉพาะช่วง block ใหม่ต่อจาก scan ล่าสุดในหน่วยความจำ เมื่อเปิดหน้าใหม่จะเริ่มสแกนใหม่จาก block ตั้งต้น โดยไม่โหลดผลเลือกตั้งเก่าจากเครื่อง
+- **โหมด unavailable**: หาก RPC อ่านข้อมูลสำคัญไม่ครบ หรือ tally ไม่ตรงกับ state บนเชน
+  จะแสดง banner แจ้งเตือนและปุ่ม retry โดยลองใหม่ทุก 45 วินาที (ไม่มี mock/cache ผลเก่า)
 
 ## ฟีเจอร์
 
@@ -83,7 +81,7 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
   (SVG วาดเอง ไม่เพิ่ม chart library)
 - Export CSV สามไฟล์: *ผลสรุป* ต่อ (ข้อ, ตัวเลือก) / *ทุกธุรกรรมโหวต* / *ต่อผู้โหวต* (มี tx hash + URL)
 - รายการธุรกรรมโหวตล่าสุด (block time, ผู้โหวต, ผู้สมัคร, คะแนน, link kubscan)
-- สถานะ RPC, block number ล่าสุด, อัปเดตล่าสุดเมื่อ x วินาทีก่อน, badge cross-check
+- สถานะ RPC, block number ล่าสุด, อัปเดตล่าสุดเมื่อ x วินาทีก่อน, badge ตรวจ tally กับ state บนเชน
 - ธีม classic dark/neon-green และธีม **Pixel Arts** ที่สลับจากปุ่มมุมขวาบน (จำค่าไว้ใน browser; ผู้เข้าชมใหม่เริ่มที่ Pixel)
 - ธีม Pixel ใช้ artwork ที่สร้างด้วย PixelLab: hero banner นักผจญภัยชาย 5 คน, wordmark KUB และ creator credit ของ VeeNagi
 
@@ -93,7 +91,7 @@ Dashboard เกาะติด **ผลโหวตจริงจากบล�
 npm install
 npm run dev        # dev server
 npm run build      # typecheck + build → dist/
-npm run verify     # พิสูจน์ end-to-end: อ่านเชนจริง + เทียบ /api/votes (ถ้าไม่ผ่านจะ exit 1)
+npm run verify     # พิสูจน์ end-to-end: อ่านเชนจริง + เทียบ tally กับ view state (ถ้าไม่ผ่านจะ exit 1)
 npm run preview    # เสิร์ฟ dist/ ที่ build แล้ว
 ```
 
@@ -132,7 +130,6 @@ scripts/refresh-kub-docs-index.ps1 -Full
 | ตัวแปร | Default | คำอธิบาย |
 |---|---|---|
 | `VITE_RPC_URL` | `https://rpc.kubchain.io` | RPC ของ KUB Chain Mainnet |
-| `VITE_API_FALLBACK_URL` | `https://kubcouncil.vercel.app/api/votes` | API สำหรับ cross-check + ชื่อผู้สมัคร |
 
 ## Deploy: GitHub + GitHub Pages (แนะนำ — รันบนเว็บ GitHub โดยตรง)
 
@@ -151,8 +148,7 @@ git push -u origin main
    (vite.config ตั้ง `base: "./"` ไว้แล้ว — ทำงานกับ subpath รวมถึง root ได้ทั้งคู่)
 
 > CORS ทราบล่วงหน้า: RPC ของ KUB Chain เปิด `Access-Control-Allow-Origin: *` (อ่านเชนจาก browser ได้ปกติ)
-> แต่ API kubcouncil ไม่แนบ CORS — หน้าเว็บจึงใช้ "ชื่อผู้สมัคร" ที่ตั้งฝังไว้ใน config
-> (ยืนยัน index กับเชนแล้ว — ดู comment ใน `src/config/election.ts`) ส่วนคะแนนทุกตัวยังมาจากเชนจริง
+> ชื่อผู้สมัครที่ยืนยันแล้วฝังไว้ใน config; คะแนนและ state อ่านจากเชนโดยตรง
 
 ## Deploy: Netlify (ทางเลือก, ถ้ายังอยากใช้ Netlify)
 
@@ -171,7 +167,7 @@ netlify deploy --build --prod
 
 - เว็บนี้ **ไม่ใช่ทรัพย์สินทางการ** ของ KUB / Kub Chain — เป็นเครื่องมือรายงานแบบ public interest
 - ข้อมูลมาจากบล็อกเชนสาธารณะ 100% (read-only) — ธุรกรรมโหวตเปิดดูได้เองบน kubscan ทุกครั้งผ่านลิงก์
-- gKUB decimals = 18 (พิสูจน์โดยนัย: minQuorum `20e18` == "20" ใน API และคะแนนตรงเป๊ะทุกตัว)
+- gKUB decimals = 18 (minQuorum `20e18` บนเชนเท่ากับ 20 gKUB)
 - สัญลักษณ์ token จริงบนเชนคือ **"G KUB Token" (GKT)** — แอปแสดง name/symbol จากเชนสด
 - **ยอด gKUB ในกระเป๋า** ใช้ `balanceOf` อ่านสดจากเชน — เช็คเฉพาะกระเป๋าที่ลงโหวตเทิร์นนี้
   (ไม่ใช่ทุกกระเป๋าทั้งเชนทั้งหมด เพราะ RPC สาธารณะไม่อนุญาตให้สแกน Transfer logs ทั้ง token
@@ -181,8 +177,7 @@ netlify deploy --build --prod
   ถ้ากระเป๋าไหนอ่านไม่สำเร็จ UI จะแสดง "—" พร้อมคำอธิบาย ไม่เดาตัวเลข
 - ยอด "ในกระเป๋า" คือยอด **ณ อ่านล่าสุด** (โหวตถูก burn ทันที จึงไม่รวมอยู่ในยอด) —
   auto refresh ทุก ~5 นาที และกดปุ่มรีเฟรชได้ตลอด
-- API อย่างเป็นทางการอาจไม่ได้แสดง "ตัวเลข" แบบตรง timing เดียวกับการอ่านเชนเสมอ — ระบบจะแจ้ง
-  `apiUpdatedAt` และแอปให้ความสำคัญกับค่า on-chain เป็นหลักเสมอ
+- ผลคะแนนจะไม่ถูกแสดงหาก event tally ไม่ตรงกับ `choiceVoted` บนเชน หรืออ่าน proposal state ไม่ครบ
 
 ## โครงสร้างไฟล์
 
@@ -194,7 +189,7 @@ Kub-Council-Report-GLM/
 ├─ .github/instructions/    # กติกาการออกแบบ Pixel-theme
 ├─ src/
 │  ├─ components/           # Header, Countdown, StatsPanel (donut+timeline), ProposalCard, TxFeed, WalletTable, Banners, Footer
-│  ├─ hooks/useElection.ts  # polling 15 วิ + incremental scan
+│  ├─ hooks/useElection.ts  # incremental scan + retry เมื่อข้อมูล unavailable
 │  ├─ hooks/useCountdown.ts
 │  ├─ hooks/useWalletAnalytics.ts  # balanceOf ทุกกระเป๋า แบบ sequential + progress
 │  ├─ lib/
@@ -202,7 +197,6 @@ Kub-Council-Report-GLM/
 │  │  ├─ analytics.ts       # สถิติต่อ wallet / timeline เผา / การกระจายตามหมวด
 │  │  ├─ token.ts           # อ่าน gKUB (KAP20): info + balanceOf + retry
 │  │  ├─ client.ts          # viem client (KUB Chain)
-│  │  ├─ api.ts             # cross-check kubcouncil API
 │  │  ├─ format.ts          # exact wei math + เวลา/BKK
 │  │  ├─ export.ts / csv.ts # CSV สามแบบ (ผลสรุป / ธุรกรรมโหวต / ต่อผู้โหวต)
 │  ├─ config/chain.ts       # KUB Chain (viem) + explorer helpers

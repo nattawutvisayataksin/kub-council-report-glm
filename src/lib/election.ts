@@ -11,10 +11,13 @@
  *        ต่อคะแนน เพราะซอร์สยืนยันว่าไม่มีการลด choiceVoted/totalVoted)
  *   2) readContract getProposalInfoById(id) ต่อ proposal → state quorum/ผู้โหวตล่าสุด
  *   3) readContract voteToken() → ตรวจ gKUB address บนเชน (ต้อง == config)
- *   4) cross-check กับ kubcouncil /api/votes → ชื่อผู้สมัคร + ตัวเลขต้องตรง
+ *
+ * ตรวจสอบความถูกต้องผ่าน Block Chain โดยตรงเท่านั้น (ไม่มีข้อความ cross-check ภายนอก):
+ *   - tally จาก logs ต้องตรงกับ state บนเชน (view choiceVoted) → tallyMatchesView
+ *   - ชื่อผู้สมัครจาก VERIFIED_CANDIDATE_NAMES (ฝังใน config จากซอร์สที่ยืนยันแล้ว)
  *
  * โปรดทราบ: การโหวต "เผา" gKUB (voteToken.burn ใน source) ทำให้ tally เป็น additive จริง
- * และผลรวม events == state บนเชน == ตัวเลขบน /api/votes (ยืนยันแก่ผู้ใช้)
+ * และผลรวม events == state บนเชน (ยืนยันใน runtime ทุกรอบ)
  */
 
 import { decodeEventLog, encodeEventTopics } from "viem";
@@ -29,9 +32,7 @@ import {
   proposalAbi,
   type ProposalId,
 } from "../config/election";
-import { fetchApiSnapshot, type ApiSnapshot } from "./api";
 import { makeKubClient, pickStruct, type KubClient } from "./client";
-import { compareWeiTol, gkubStringToWei } from "./format";
 import { withRetry } from "./rpc";
 import { sleep } from "./token";
 import { t } from "../i18n/dict";
@@ -102,12 +103,11 @@ export interface ProposalModel {
   completed: boolean;
   quorumMet: boolean;
   options: OptionModel[];
-  tallyMatchesApi: boolean | null;
   tallyMatchesView: boolean | null;
   voteRowCount: number;
 }
 
-export type ModelMode = "live" | "api-fallback" | "unavailable";
+export type ModelMode = "live" | "unavailable";
 
 export interface ElectionModel {
   mode: ModelMode;
@@ -115,9 +115,6 @@ export interface ElectionModel {
   latestBlock: number;
   voteToken: string | null;
   voteTokenVerified: boolean;
-  crossCheckOk: boolean | null;
-  apiUpdatedAt: string | null;
-  apiFetchedAtMs: number | null;
   proposals: ProposalModel[];
   votes: VoteRow[]; // block ใหม่ → เก่า
   refunds: RefundRow[];
@@ -150,6 +147,16 @@ function sx(v: unknown): string {
 }
 function errText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
+}
+
+function uniqueRows<T extends { key: string }>(rows: readonly T[]): T[] {
+  const seen = new Set<string>();
+  return rows.filter((row) => {
+    const key = row.key.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 /** topic0 จาก ABI จริง (viem เข้ารหัสเอง — ต้องได้ค่าเดียวกับ VERIFIED_TOPIC0 ที่ตรวจจากเชน) */
@@ -259,16 +266,12 @@ function firstDefined<T>(...vals: Array<T | undefined | null>): T | undefined {
 
 export interface FetchParams {
   rpcUrl: string;
-  apiFallbackUrl: string;
   /** hash เริ่มสแกน (inclusive) — รอบแรกใช้ SCAN_START_BLOCK รอบถัดไปเผ้า lastScanned+1 */
   fromBlock: number;
   /** ผลครั้งก่อนเพื่อ dedupe/merge */
   previous?: { votes: VoteRow[]; refunds: RefundRow[] };
-  /** cache block→timestamp ระหว่างการทำงาน */
-  blockTsCache: Map<number, number>;
-  /** force ดึงชื่อ/cross-check จาก API ใหม่ทุกครั้ง */
-  apiRefresh?: boolean;
-  cachedApi?: ApiSnapshot | null;
+  /** timestamp lookup ที่เก็บไว้เฉพาะในหน่วยความจำระหว่าง session */
+  blockTimestamps: Map<number, number>;
 }
 
 export interface FetchResult {
@@ -295,8 +298,8 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   }
 
   // ------------------------------------------------ 2) logs → votes / meta / lifecycle
-  const votes: VoteRow[] = p.previous?.votes ?? [];
-  const refunds: RefundRow[] = p.previous?.refunds ?? [];
+  const votes: VoteRow[] = uniqueRows(p.previous?.votes ?? []);
+  const refunds: RefundRow[] = uniqueRows(p.previous?.refunds ?? []);
   const createdMeta = new Map<number, Record<string, unknown>>();
   const closedSet = new Set<number>();
   const completedSet = new Set<number>();
@@ -372,13 +375,13 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   // ⚠ ห้าม Promise.all (โดน rate limit) — อ่านทีละบล็อกเว้นจังหวะ + retry
   // และจำกัดจำนวนต่อรอบ: ช่วงโหวตยาวมีบล็อกใหม่ได้หลายสิบอัน โหลดแรกจึงไม่เสียเวลา
   // กับบล็อกเก่าทั้งหมด (feed/กราฟแสดง "ก้อน N" ชั่วคราว แล้วเติม ts ค่อย ๆ)
-  // blockTsCache ถูก persist ใน localStorage → เปิดครั้งถัดไปไม่ต้องยิงซ้ำ
+  // เก็บ timestamp เฉพาะในหน่วยความจำของ session นี้ ไม่บันทึกผลเลือกตั้งลงเครื่อง
   if (onchainOk) {
     const MAX_TS_FETCH = 24; // รอบแรกดึงแค่ 24 บล็อกล่าสุด ที่เหลือค่อย ๆ ทยอยใน poll ถัดไป
     const need = [...new Set([...votes, ...refunds].map((r) => r.block))]
       .filter((b) => {
-        const cached = p.blockTsCache.get(b);
-        return !(cached != null && cached > 0); // cache = 0 คือเคยล้ม → ลองใหม่ได้
+        const timestamp = p.blockTimestamps.get(b);
+        return !(timestamp != null && timestamp > 0); // 0 คือเคยล้ม → ลองใหม่ได้
       })
       .sort((a, b) => a - b);
     const limited =
@@ -391,15 +394,15 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
           () => client.getBlock({ blockNumber: BigInt(b) }),
           { retries: 1, baseMs: 800 },
         );
-        p.blockTsCache.set(b, Number(blk.timestamp));
+        p.blockTimestamps.set(b, Number(blk.timestamp));
       } catch {
-        p.blockTsCache.set(b, 0);
+        p.blockTimestamps.set(b, 0);
       }
       if (i < limited.length - 1) await sleep(BLOCK_PACE_MS);
     }
   }
-  for (const r of votes) r.blockTs = p.blockTsCache.get(r.block) ?? null;
-  for (const r of refunds) r.blockTs = p.blockTsCache.get(r.block) ?? null;
+  for (const r of votes) r.blockTs = p.blockTimestamps.get(r.block) ?? null;
+  for (const r of refunds) r.blockTs = p.blockTimestamps.get(r.block) ?? null;
 
   // ------------------------------------------------ 3) live state (view calls)
   const liveInfo = new Map<number, ProposalLive>();
@@ -442,17 +445,7 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     }
   }
 
-  // ------------------------------------------------ 4) API cross-check / ชื่อผู้สมัคร
-  let api: ApiSnapshot | null = p.cachedApi ?? null;
-  try {
-    if (p.apiRefresh || !api) api = await fetchApiSnapshot(p.apiFallbackUrl);
-  } catch (e) {
-    warnings.push(`API cross-check fail: ${errText(e)}`);
-  }
-  const apiById = new Map<number, ApiSnapshot["proposals"][number]>();
-  if (api) for (const ap of api.proposals) apiById.set(ap.id, ap);
-
-  // ------------------------------------------------ 5) tally จาก events
+  // ------------------------------------------------ 4) tally จาก events
   const tally = new Map<string, { amountWei: bigint; users: Set<string>; rows: number }>();
   const perIdVoteRows = new Map<number, number>();
   for (const r of votes) {
@@ -482,32 +475,24 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     totalVoteWei += r.amountWei;
   }
 
-  // ------------------------------------------------ 6) โหมด
-  const mode: ModelMode = onchainOk
-    ? "live"
-    : api
-      ? "api-fallback"
-      : "unavailable";
+  // ------------------------------------------------ 5) ตรวจข้อมูลจาก chain
   votes.sort((x, y) => y.block - x.block || y.logIndex - x.logIndex);
   refunds.sort((x, y) => y.block - x.block);
 
-  // ------------------------------------------------ 7) ประกอบโมเดล proposal
+  // ------------------------------------------------ 6) ประกอบโมเดล proposal
   const proposals: ProposalModel[] = DISPLAY_ORDER.map((pid) => {
     const id = Number(pid) as number;
     const live = liveInfo.get(id);
     const created = createdMeta.get(id);
-    const ap = apiById.get(id);
     const cat = CATEGORY_BY_ID[id as ProposalId];
 
     const startTs =
       live?.startTs ??
       (created ? nxo(created.startTime) : undefined) ??
-      ap?.startTs ??
       0;
     const endTs =
       live?.endTs ??
       (created ? nxo(created.endTime) : undefined) ??
-      ap?.endTs ??
       0;
     const createTime =
       live?.createTime ??
@@ -517,13 +502,12 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     const numOfChoice: number = firstDefined(
       live ? live.choiceVotedWei.length : undefined,
       created ? nxo(created.numOfChoice) : undefined,
-      ap ? ap.options.length : undefined,
     ) ?? Math.max(0, tallyChoiceMax(id) + 1);
 
     const minQuorumWei = firstDefined(
       live?.minQuorumWei,
       created ? bx(created.minQuorum) : undefined,
-    ) ?? (ap ? gkubStringToWei(String(ap.minQuorum)) : 0n);
+    ) ?? 0n;
 
     const ipfs = live?.ipfs ?? (created ? sx(created.ipfs) : "") ?? "";
     const owner = live?.owner ?? (created ? sx(created.owner) : "") ?? "";
@@ -532,15 +516,9 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     let optionVotes: bigint[] = [];
     let optionVoters: number[] = [];
     for (let c = 0; c < numOfChoice; c++) {
-      const t = tally.get(`${id}:${c}`);
-      optionVotes.push(t?.amountWei ?? 0n);
-      optionVoters.push(t ? t.users.size : 0);
-    }
-
-    // โหมด api-fallback: ไม่มีข้อมูล on-chain → ใช้ API snapshot (แสดง banner แจ้งชัด)
-    if (mode === "api-fallback" && ap) {
-      optionVotes = ap.options.slice(0, numOfChoice).map((o) => gkubStringToWei(String(o.votes)));
-      optionVoters = ap.options.slice(0, numOfChoice).map(() => 0);
+      const tallyEntry = tally.get(`${id}:${c}`);
+      optionVotes.push(tallyEntry?.amountWei ?? 0n);
+      optionVoters.push(tallyEntry ? tallyEntry.users.size : 0);
     }
 
     const totalFromLogs = optionVotes.reduce((s, v) => s + v, 0n);
@@ -557,13 +535,12 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     const bestCount = optionVotes.filter((v) => v === best && v > 0n).length;
     const opts: OptionModel[] = [];
     for (let idx = 0; idx < optionVotes.length; idx++) {
-      const apiOpt = ap?.options.find((o) => o.idx === idx);
       const localName = VERIFIED_CANDIDATE_NAMES[id]?.[idx];
-      const name = apiOpt?.name ?? localName ?? t("pc.optionFallback", { n: idx + 1 });
+      const name = localName ?? t("pc.optionFallback", { n: idx + 1 });
       opts.push({
         idx,
         name,
-        isAbstain: apiOpt ? apiOpt.abstain : /^abstain$/i.test(name),
+        isAbstain: /^abstain$/i.test(name),
         votesWei: optionVotes[idx] ?? 0n,
         voters: optionVoters[idx] ?? 0,
         pct: totalFromLogs > 0n ? Number((optionVotes[idx]! * 10000n) / totalFromLogs) / 100 : 0,
@@ -571,36 +548,29 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
       });
     }
 
-    // cross-check logs vs API (ต่อ option)
-    let tallyMatchesApi: boolean | null = null;
-    if (mode === "live" && ap) {
-      tallyMatchesApi = true;
-      for (let idx = 0; idx < opts.length; idx++) {
-        const apiOpt = ap.options.find((o) => o.idx === idx);
-        const exp = apiOpt ? gkubStringToWei(String(apiOpt.votes)) : 0n;
-        if (!compareWeiTol(opts[idx]!.votesWei, exp)) {
-          tallyMatchesApi = false;
-          break;
-        }
-      }
-    }
-    // cross-check logs vs state บนเชน (view choiceVoted)
+    // cross-check logs vs state บนเชน (view choiceVoted) — การตรวจสอบผ่าน Block Chain โดยตรง
     let tallyMatchesView: boolean | null = null;
-    if (mode === "live" && live) {
+    if (live) {
       tallyMatchesView = true;
-      for (let idx = 0; idx < opts.length; idx++) {
+      if (tallyChoiceMax(id) >= opts.length || opts.length !== live.choiceVotedWei.length) {
+        tallyMatchesView = false;
+      }
+      for (let idx = 0; tallyMatchesView && idx < opts.length; idx++) {
         const chainAmt = live.choiceVotedWei[idx] ?? 0n;
         if (chainAmt !== opts[idx]!.votesWei) {
           tallyMatchesView = false;
           break;
         }
       }
+      if (!tallyMatchesView) {
+        warnings.push(`Proposal ${id}: vote logs do not match on-chain state`);
+      }
     }
 
     return {
       id,
       category: cat,
-      title: ap?.title ?? cat,
+      title: cat,
       owner,
       startTs,
       endTs,
@@ -614,15 +584,10 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
       completed,
       quorumMet,
       options: opts,
-      tallyMatchesApi,
       tallyMatchesView,
       voteRowCount: perIdVoteRows.get(id) ?? 0,
     };
   });
-
-  const crossCheckOk = proposals.some((pp) => pp.tallyMatchesApi !== null)
-    ? proposals.every((pp) => pp.tallyMatchesApi !== false)
-    : null;
 
   const voteTokenVerified = voteTokenLive
     ? voteTokenLive.toLowerCase() === GKUB_TOKEN.toLowerCase()
@@ -630,6 +595,24 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   if (voteTokenLive && !voteTokenVerified) {
     warnings.push(`voteToken() = ${voteTokenLive} ≠ config ${GKUB_TOKEN}`);
   }
+
+  const allProposalStatesVerified = proposals.length === PROPOSAL_IDS.length &&
+    proposals.every((proposal) => {
+      const live = liveInfo.get(proposal.id);
+      return (
+        live != null &&
+        live.proposalId === proposal.id &&
+        live.choiceVotedWei.length > 0 &&
+        live.startTs > 0 &&
+        live.endTs >= live.startTs &&
+        proposal.tallyMatchesView === true
+      );
+    });
+  if (onchainOk && !allProposalStatesVerified) {
+    warnings.push("Proposal state is incomplete or does not match vote logs");
+  }
+  const mode: ModelMode =
+    onchainOk && voteTokenVerified && allProposalStatesVerified ? "live" : "unavailable";
 
   const totalVoteCount = [...perIdVoteRows.values()].reduce((s, v) => s + v, 0);
 
@@ -640,9 +623,6 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
       latestBlock,
       voteToken: voteTokenLive,
       voteTokenVerified,
-      crossCheckOk,
-      apiUpdatedAt: api?.updatedAt ?? null,
-      apiFetchedAtMs: api?.fetchedAtMs ?? null,
       proposals,
       votes,
       refunds,

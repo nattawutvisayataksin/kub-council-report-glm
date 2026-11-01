@@ -25,21 +25,15 @@ type Dict = Record<string, string>;
 
 const th: Dict = {
   // ---- App ----
-  "loading-first": "กำลังอ่านข้อมูลจากบล็อกเชน KUB Chain…",
-  "loading-refresh": "กำลังอัปเดตข้อมูล…",
-  "loading-sub": "สแกน ProposalVoted logs + cross-check API — ใช้เวลาเพียงสักครู่",
-  "loading-firstvisit":
-    "ครั้งแรกต้องสแกนบล็อกทั้งช่วงเลือกตั้ง (มือถือ/เครือข่ายช้าอาจใช้เวลา 1–2 นาที) — ครั้งถัดไปจะเร็วขึ้นมาก เพราะเก็บผลอ่านล่าสุดไว้ในเครื่องนี้แล้ว",
+  "loading-first": "กำลังโหลด กรุณารอสักครู่…",
+  "loading-refresh": "กำลังโหลด กรุณารอสักครู่…",
 
   // ---- Header ----
   "header.subtitle":
     "รายงานผลโหวตจริงที่อ่านจากบล็อกเชน KUB Chain Mainnet (Chain ID 96) · read-only · ไม่ใช่เว็บทางการ",
   "chip.live": "On-chain live",
-  "chip.fallback": "API snapshot fallback",
   "chip.offline": "ไม่มีการเชื่อมต่อ",
   "chip.block": "ก้อน {n}",
-  "chip.crossOk": "Cross-check /api/votes ✓ ตรงทุกตัว",
-  "chip.crossFail": "Cross-check คลาดเคลื่อน — ตรวจ console",
   "chip.updated": "อัปเดตล่าสุด: {t}",
   "btn.refresh": "อัปเดตตอนนี้",
   "btn.refreshing": "กำลังอัปเดต…",
@@ -81,8 +75,6 @@ const th: Dict = {
   "sp.tlCount": "สะสม {n} tx",
   "sp.tlEmpty":
     "ยังไม่มีธุรกรรมโหวตที่มี timestamp — ระบบจะวาดกราฟเมื่อมีข้อมูลจากเชน",
-  "sp.pillApi": "ค่าจาก API snapshot",
-  "sp.pillOnchain": "ต้องมี on-chain",
   "sp.aria.donut": "การกระจายคะแนนตามหมวด",
   "sp.aria.timeline": "เผา gKUB สะสมตามเวลา",
   "sp.cum": "gKUB สะสม",
@@ -102,8 +94,6 @@ const th: Dict = {
   "pc.nvoters": "ผู้โหวตไม่ซ้ำ",
   "pc.txcount": "ธุรกรรมโหวต",
   "pc.matchView": "ตรงกับ state บนเชน ✓",
-  "pc.matchApi": "ตรงกับ /api/votes ✓",
-  "pc.mismatchApi": "คลาดเคลื่อนกับ /api/votes",
   "pc.optionFallback": "ตัวเลือก {n}",
 
   // ---- TxFeed ----
@@ -166,16 +156,9 @@ const th: Dict = {
     "ยอด \"ในกระเป๋า\" คือ balanceOf ของ gKUB ณ ปัจจุบัน (สดจากเชน) — คะแนนโหวตถูก burn ไปแล้ว จึงไม่รวมอยู่ในยอดนี้ · ข้อจำกัด: เช็คเฉพาะกระเป๋าที่ลงโหวตเทิร์นนี้ ไม่ใช่ทุกกระเป๋าทั้งเชน",
 
   // ---- Banners ----
-  "bn.fallbackTitle": "⚠ โหมด API snapshot:",
-  "bn.fallback1": "ไม่สามารถติดต่อ RPC ของ KUB Chain ได้ตอนนี้ ระบบจึงแสดงผลจาก API ของหน้า kubcouncil (",
-  "bn.fallback3": ") ซึ่งมาจากแหล่งเดียวกัน — ",
-  "bn.fallbackUpdated": "ข้อมูล API ปรับปรุงที่ {t}",
-  "bn.fallbackNoTs": "ไม่มี timestamp จาก API",
-  "bn.fallbackFetched": " (ดึงเมื่อ {t})",
-  "bn.fallbackRetry": " สรุปข้อมูลเฉพาะตอนเปิดหน้า — กดปุ่ม \"อัปเดตตอนนี้\" เพื่อลองอ่าน on-chain ใหม่",
   "bn.unavailTitle": "⛔ ข้อมูลไม่พร้อมแสดง:",
   "bn.unavailBody":
-    "ทั้ง RPC ของ KUB Chain และ API cross-check ไม่ตอบสนอง ได้ข้อมูลไม่ถูกต้องพอจะแสดงจริง แสดงข้อมูลเปล่า ไม่มี mock data — ระบบลองใหม่เองทุก 45 วินาที หรือกดปุ่ม",
+    " อ่านข้อมูลจาก KUB Chain ได้ไม่ครบ หรือผลรวม vote logs ไม่ตรงกับ state บนเชน จึงยังแสดงผลจริงไม่ได้ — ไม่มี mock หรือผลเก่าจาก cache ระบบลองใหม่เองทุก 45 วินาที หรือกดปุ่ม",
   "bn.retry": "ลองอีกครั้ง",
 
   // ---- Theme / Lang toggles ----
@@ -194,22 +177,15 @@ const th: Dict = {
 
 const en: Dict = {
   // ---- App ----
-  "loading-first": "Reading data from the KUB Chain blockchain…",
-  "loading-refresh": "Updating data…",
-  "loading-sub":
-    "Scanning ProposalVoted logs + cross-checking the API — this takes a moment",
-  "loading-firstvisit":
-    "First visit scans the whole election's block history (may take 1–2 minutes on slow networks). Next visits are much faster — the latest scan result is cached on this device.",
+  "loading-first": "Please wait — loading…",
+  "loading-refresh": "Please wait — loading…",
 
   // ---- Header ----
   "header.subtitle":
     "Real on-chain vote results from KUB Chain Mainnet (Chain ID 96) · read-only · not an official site",
   "chip.live": "On-chain live",
-  "chip.fallback": "API snapshot fallback",
   "chip.offline": "No connection",
   "chip.block": "Block #{n}",
-  "chip.crossOk": "Cross-check /api/votes ✓ all match",
-  "chip.crossFail": "Cross-check mismatch — see console",
   "chip.updated": "Updated {t}",
   "btn.refresh": "Refresh now",
   "btn.refreshing": "Updating…",
@@ -251,8 +227,6 @@ const en: Dict = {
   "sp.tlCount": "{n} tx total",
   "sp.tlEmpty":
     "No vote transactions with timestamps yet — the chart will appear once chain data arrives",
-  "sp.pillApi": "Values from API snapshot",
-  "sp.pillOnchain": "Needs on-chain",
   "sp.aria.donut": "Score distribution by category",
   "sp.aria.timeline": "Cumulative gKUB burned over time",
   "sp.cum": "gKUB cumulative",
@@ -272,8 +246,6 @@ const en: Dict = {
   "pc.nvoters": "Unique voters",
   "pc.txcount": "Vote transactions",
   "pc.matchView": "Matches on-chain state ✓",
-  "pc.matchApi": "Matches /api/votes ✓",
-  "pc.mismatchApi": "Mismatch with /api/votes",
   "pc.optionFallback": "Option {n}",
 
   // ---- TxFeed ----
@@ -339,18 +311,9 @@ const en: Dict = {
     "\"In wallet\" = live gKUB balanceOf right now — the vote score was burned, so it is not included · Limitation: only wallets that voted in this round are checked, not every wallet on the chain",
 
   // ---- Banners ----
-  "bn.fallbackTitle": "⚠ API snapshot mode:",
-  "bn.fallback1":
-    "The KUB Chain RPC is unreachable right now, so this page shows values from the kubcouncil API (",
-  "bn.fallback3": ") from the same source — ",
-  "bn.fallbackUpdated": "API updated at {t}",
-  "bn.fallbackNoTs": "no timestamp from API",
-  "bn.fallbackFetched": " (fetched {t})",
-  "bn.fallbackRetry":
-    " Results are fetched on page load — press \"Refresh now\" to try on-chain again",
   "bn.unavailTitle": "⛔ Data unavailable:",
   "bn.unavailBody":
-    "Both the KUB Chain RPC and the cross-check API are not responding. Nothing reliable to show — no mock data. It retries automatically every 45 seconds, or press",
+    " Chain data is incomplete or vote logs do not match on-chain state, so reliable results cannot be shown — no mock data or stale cached results. It retries every 45 seconds, or press",
   "bn.retry": "Try again",
 
   // ---- Theme / Lang toggles ----

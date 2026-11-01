@@ -18,11 +18,11 @@ rate limit ("Request exceeds defined limit.") จุดเดิมที่ "�
 - `election.ts`: getLogs chunk เว้น 140ms + retry; block timestamps อ่านทีละบล็อกเว้น 130ms;
   5 view calls ทีละข้อเว้น 150ms — **ห้ามกลับไปใช้ Promise.all กับ RPC นี้**
 - `client.ts`: transport `batch: false`, `retryCount: 1` (viem), timeout 14s
-- `useElection.ts`: โหลดแรกล้ม → retry 3 รอบ (2.5→5→10s) ก่อนแสดง error;
-  mode unavailable → ลองเองทุก 45s; **ข้าม poll เมื่อแท็บซ่อน (`document.hidden`)**
-  และดึงทันทีตอนกลับมาที่แท็บ — ลดการเผา quota บนมือถือ
+- `useElection.ts`: ไม่เก็บ snapshot ผลเลือกตั้งใน localStorage; ใช้ incremental scan/dedupe
+  จากผลที่ตรวจสอบผ่านแล้วในหน่วยความจำ; mode unavailable → ลองเองทุก 45s
+  (ไม่ advance block checkpoint จนกว่าข้อมูล RPC และ tally จะตรวจผ่าน)
 - `useWalletAnalytics.ts`: ข้าม auto-refresh เมื่อแท็บซ่อน (sequential อยู่เหมือนเดิม)
-- `npm run verify` ผ่าน (2026-11-01: 90 tx / 28 voters / 7297.8114 gKUB — matchApi ทุกข้อ)
+- `npm run verify` ผ่าน (2026-11-01: 90 tx / 28 voters / 7297.8114 gKUB — tally ตรงกับ state บนเชนทุกข้อ)
 
 **i18n TH/EN**: `src/i18n/dict.ts` (core ที่ lib ใช้ได้) + `src/i18n/index.tsx` (LangProvider,
 localStorage `kub-council-lang`, default ไทย) + ปุ่ม ไทย/EN ใน header (LangToggle) +
@@ -40,7 +40,7 @@ Dashboard เกาะติดผลโหวตจริงของ **KUB Com
 KUB Chain Mainnet (Chain ID 96) — **read-only 100% ไม่มีกระเป๋า ไม่มี API key**
 
 หลักคิดสำคัญที่ "ห้ามพัง": ตัวเลขทุกตัวมาจาก **ProposalVoted logs ของเชนจริง → tally ด้วย BigInt แบบ exact wei**
-แล้ว cross-check กับ API อย่างเป็นทางการ (`kubcouncil.vercel.app/api/votes`) — **ไม่มี mock data หลอกผู้ใช้เด็ดขาด**
+และต้องอ่าน proposal state ครบพร้อมตรวจ tally กับ `choiceVoted` บนเชน — **ไม่มี mock หรือ cache ผลเก่าหลอกผู้ใช้**
 
 ## 2) ค่าที่ verify แล้ว (อยู่ใน `src/config/election.ts` พร้อม comment ยืนยัน)
 
@@ -51,18 +51,19 @@ KUB Chain Mainnet (Chain ID 96) — **read-only 100% ไม่มีกระเ
 | Proposal | id **15–19** (5 หมวด), ช่วงโหวต 21 ต.ค. → 10 พ.ย. 2026 12:00 น. (ไทย) ts=1792558800→1794286800 |
 | Event | `ProposalVoted` topic0 = `0xf3801d77e9bff0fe5c3de5dfbdbe6cf3d04bb3e22005abfe7bf389dc78476fd1` |
 | Scan start | block `36255000`, chunk 4000 บล็อกต่อ call |
-| ตัวเลข ณ 26 ต.ค. 2026 | **48 tx / 22 กระเป๋า / 1,201.1207 gKUB ถูกเผา** — ตรง API ทุกตัว (`npm run verify` ✓) |
+| ตัวเลข ณ 1 พ.ย. 2026 | **90 tx / 28 กระเป๋า / 7,297.8114 gKUB ถูกเผา** — tally ตรงกับ state บนเชน (`npm run verify` ✓) |
 
 ## 3) Flow ข้อมูล
 
 ```
 RPC rpc.kubchain.io (CORS เปิด) → eth_getLogs (chunk 4000) + readContract (getProposalInfoById, voteToken, balanceOf...)
   → merge/dedupe/tally exact wei → ElectionModel (src/lib/election.ts)
-  → cross-check /api/votes (ชื่อผู้สมัคร + เทียบเลข) → src/lib/api.ts
-    ⚠ API นี้ไม่แนบ CORS → จึงมีชื่อผู้สมัครฝังไว้ใน config (VERIFIED_CANDIDATE_NAMES) ใช้เป็นตัว label
+  → ตรวจ tally กับ getProposalInfoById().choiceVoted และตรวจ gKUB token address
+    ชื่อผู้สมัครที่ยืนยันแล้วฝังไว้ใน config (VERIFIED_CANDIDATE_NAMES)
   → React UI (Header/Countdown/SummaryStrip/StatsPanel/ProposalCard×5/TxFeed/WalletTable)
-โหมด: live → api-fallback (banner เหลือง) → unavailable (banner แดง + ปุ่ม retry)
-Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบถัดไป incremental จาก block ล่าสุดที่ scan)
+โหมด: live → unavailable (banner แดง + ปุ่ม retry)
+อ่านเมื่อเปิดหน้า/ผู้ใช้กดอัปเดต; unavailable ลองใหม่ทุก 45 วิ (ครั้งแรก scan เต็ม,
+รอบถัดไป incremental จาก block ล่าสุดในหน่วยความจำ; ไม่มี election snapshot ใน localStorage)
 ```
 
 - โหวต = **เผา gKUB** (`voteToken.burn`) → tally additive จริง, ย้อนได้
@@ -73,20 +74,19 @@ Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบ
 
 | ไฟล์ | หน้าที่ |
 |---|---|
-| `src/config/chain.ts` | viem chain (id 96) + env (VITE_RPC_URL, VITE_API_FALLBACK_URL) + explorer URL helper |
+| `src/config/chain.ts` | viem chain (id 96) + env (VITE_RPC_URL) + explorer URL helper |
 | `src/config/election.ts` | ทุกค่า verified + ABI ย่อ + ชื่อผู้สมัครฝังไว้ |
 | `src/lib/client.ts` | viem client + `pickStruct` (กัน tuple vs object) |
-| `src/lib/election.ts` | **หัวใจ**: fetchElectionModel → getLogs chunked + view calls + cross-check + ประกอบโมเดล |
-| `src/lib/api.ts` | fetch `/api/votes` (timeout 8s) |
+| `src/lib/election.ts` | **หัวใจ**: fetchElectionModel → getLogs chunked + view calls + ตรวจ tally + ประกอบโมเดล |
 | `src/lib/token.ts` | KAP20 ABI + tokenInfo + `fetchBalanceOne` (retry/backoff) — **⚠ ดูข้อ 6 rate limit** |
 | `src/lib/analytics.ts` | buildWalletStats / buildBurnTimeline / buildProposalTotals |
 | `src/lib/format.ts` | wei↔gKUB exact (18 dec) + เวลา Asia/Bangkok (BKK) + compareWeiTol |
 | `src/lib/csv.ts` + `export.ts` | CSV 3 แบบ: ผลสรุป / ทุกธุรกรรม / ต่อผู้โหวต (มี BOM Excel) |
-| `src/hooks/useElection.ts` | poll 15 วิ + incremental scan + cache blockTs |
+| `src/hooks/useElection.ts` | incremental scan เฉพาะในหน่วยความจำ + retry เมื่อ unavailable ทุก 45 วิ |
 | `src/hooks/useWalletAnalytics.ts` | balanceOf ทุกกระเป๋าแบบ **sequential เว้น ~420ms** + progress + manual refresh + auto 5 นาที |
 | `src/hooks/useCountdown.ts` | นาฬิกาวินาที (UI only) |
 | `src/components/*` | Header, CountdownCard, SummaryStrip (stat+3 export), **StatsPanel (donut+timeline SVG เอง)**, ProposalCard, **TxFeed (ปุ่มแสดงทั้งหมด + เรียงคอลัมน์)**, **WalletTable (analytics+ยอดกระเป๋า+expand+เรียง)**, SortTh (หัวตารางเรียงได้ ใช้ร่วม), Banners, Footer |
-| `scripts/verify.ts` | `npm run verify` = พิสูจน์ end-to-end (exit 1 ถ้าเลขไม่ตรง API) |
+| `scripts/verify.ts` | `npm run verify` = พิสูจน์ end-to-end (exit 1 ถ้าข้อมูลไม่ครบหรือ tally ไม่ตรง state บนเชน) |
 | `src/pixel-theme.css` | Pixel Arts override: surfaces/typography/donut legend/footer branding |
 | `src/assets/pixel/` | PixelLab-generated hero (`kub-pixel-party-banner.png`), KUB wordmark และภาพประกอบ Pixel |
 | `scripts/gen-pixel-brand-assets.ps1` | สร้าง hero/brand artwork ผ่าน PixelLab; token จาก `PIXELLAB_TOKEN` เท่านั้น |
@@ -116,7 +116,7 @@ Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบ
 1. **rpc.kubchain.io มี rate limit** — error `"Request exceeds defined limit."`
    - burst/concurrency ได้แย่ (ยิง 6 พร้อมกัน → ได้แค่ 6/22 ใบ)
    - **sequential เว้น ~400ms + retry/backoff = 22/22 ครบใน ~11 วิ** ← ใช้ท่านี้ตลอด
-   - fetchElectionModel เอง (getLogs 22 chunk ตามลำดับ + 5 view calls Promise.all) ยังผ่านได้เสมอ
+   - fetchElectionModel อ่าน logs เป็น chunks และ view calls ทีละรายการพร้อม retry/backoff
 2. การเรียกครั้งแรกช้า ~20–30 วิเป็นปกติ (getLogs 22 chunk) ปล่อย incremental หลังจากนั้นเร็วมาก
 3. viem คืน struct ได้ทั้ง array/object → ใช้ `pickStruct` เสมอ
 4. tx getLogs params = `[filter]` อันเดียว (รูปที่ RPC นี้รับจริง)
@@ -128,7 +128,7 @@ Poll ทุก ~15 วิ (ครั้งแรก scan เต็ม, รอบ
 npm install            # ครั้งเดียว
 npm run dev            # dev server ลองเล่น
 npm run build          # tsc --noEmit + vite build
-npm run verify         # พิสูจน์เลขเทียบ API (จริงกับเชน — ใช้เวลา ~40–60 วิ)
+npm run verify         # พิสูจน์ tally กับ state บนเชน (ใช้เวลา ~40–60 วิ)
 npm run preview        # ทดลอง dist
 ```
 

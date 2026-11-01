@@ -212,7 +212,6 @@ export function StatsPanel({ model }: { model: ElectionModel }) {
             <div className="cat">{t("sp.cat")}</div>
             <h3>{t("sp.donutTitle")}</h3>
           </div>
-          {model.mode === "api-fallback" && <span className="pill warn">{t("sp.pillApi")}</span>}
         </div>
         <DistributionDonut totals={totals} sumWei={sumWei} />
         <p className="mini-note muted">{t("sp.donutNote")}</p>
@@ -224,7 +223,6 @@ export function StatsPanel({ model }: { model: ElectionModel }) {
             <div className="cat">{t("sp.cat")}</div>
             <h3>{t("sp.tlTitle")}</h3>
           </div>
-          {model.mode === "api-fallback" && <span className="pill warn">{t("sp.pillOnchain")}</span>}
         </div>
         <BurnTimeline points={points} />
       </div>

@@ -17,11 +17,11 @@
  *      (source: voteProposal เรียก voteToken.burn(user, amount)) (c) logic ใน source
  *
  * 3) ช่วงเลือกตั้ง: start 1792558800 (21 ต.ค. 2026 12:00 น. ICT) → end 1794286800
- *    (10 พ.ย. 2026 12:00 น. ICT) — ตรงกับ /api/votes และ tx createProposal จริง
+ *    (10 พ.ย. 2026 12:00 น. ICT) — ตรงกับ tx createProposal จริง
  *
  * 4) SCAN_START_BLOCK = 36255000 (proposal id 15–19 ถูกสร้างที่ block 36255246–36255256)
  *
- * 5) tally จาก getLogs ProposalVoted (24 logs ณ 22 ต.ค. 2026) == /api/votes ตรงเป๊ะทุกรายการ
+ * 5) tally จาก getLogs ProposalVoted ตรวจเทียบกับ choiceVoted บนเชนทุกครั้งที่โหลด
  * ============================================================
  */
 
@@ -36,7 +36,7 @@ export const SCAN_START_BLOCK = 36255000;
 export const PROPOSAL_IDS = [15, 16, 17, 18, 19] as const;
 export type ProposalId = (typeof PROPOSAL_IDS)[number];
 
-/** หมวดจาก title ของ proposal (ยืนยันกับ /api/votes) — เรียงตามหน้า kubcouncil จริง */
+/** หมวดของ proposal — เรียงตามหน้า kubcouncil จริง */
 export const CATEGORY_BY_ID: Record<ProposalId, string> = {
   19: "Builder & Developer",
   18: "Community Contributor",
@@ -167,12 +167,9 @@ export const VERIFIED_TOPIC0 = {
 
 /**
  * ชื่อผู้สมัคร (label สำหรับแสดงผล) — ตรวจตรงกับ index ของ choice บนเชนแล้ว
- * ณ 2026-10-22T07:42Z โดย cross-check กับ /api/votes ครบทุกข้อ (matchApi=true ทุกตัว,
- * พิสูจน์ด้วย numOfChoice=4 ของข้อ #16 และตัวเลข per option ที่ตรงเป๊ะ)
+ * ณ 2026-10-22T07:42Z โดยเทียบ choice index กับ state บนเชน
  *
- * สำคัญ: เข้ารหัสไว้ตรงนี้เพียงเพื่อ label เหล่านี้จะอยู่ไปได้ไหนก็ไม่เป็นตัวเลข
- * ใช้เพราะ API ไม่แนบ CORS ต่ใด ๆ! คะแนนทุกตัววัดจากบล็อกเชนเท่านั้น
- * (API ที่ดึงได้เมื่อใด เรียกอันนั้นก่อน = src เดียวกัน)
+ * สำคัญ: ชื่อใช้เพื่อ label เท่านั้น คะแนนทุกตัววัดจากบล็อกเชน
  */
 export const VERIFIED_CANDIDATE_NAMES: Record<number, readonly string[]> = {
   19: ["VUTICHAI KUNPIPAT", "NUTCHAITAT TANTANASUWAN", "Abstain"],

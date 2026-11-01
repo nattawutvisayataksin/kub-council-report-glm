@@ -60,10 +60,6 @@ export function Header({ model, refreshing, refreshNow }: Props) {
           <span className="chip">
             <span className="dot" /> {t("chip.live")}
           </span>
-        ) : model.mode === "api-fallback" ? (
-          <span className="chip warn">
-            <span className="dot" /> {t("chip.fallback")}
-          </span>
         ) : (
           <span className="chip off">
             <span className="dot" /> {t("chip.offline")}
@@ -79,17 +75,6 @@ export function Header({ model, refreshing, refreshNow }: Props) {
           <a className="chip" href={explorerAddrUrl(GKUB_TOKEN)} target="_blank" rel="noreferrer">
             gKUB {model.voteTokenVerified ? "✓ verified" : "⚠"} {shortAddr(model.voteToken)}
           </a>
-        )}
-
-        {model.crossCheckOk === true && (
-          <span className="chip">
-            <span className="dot" /> {t("chip.crossOk")}
-          </span>
-        )}
-        {model.crossCheckOk === false && (
-          <span className="chip warn">
-            <span className="dot" /> {t("chip.crossFail")}
-          </span>
         )}
 
         <span className="chip">{t("chip.updated", { t: fmtAgoSeconds(agoSec) })}</span>

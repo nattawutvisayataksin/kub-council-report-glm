@@ -11,13 +11,9 @@ export const kubChain = defineChain({
 });
 
 export const RPC_URL_DEFAULT = "https://rpc.kubchain.io";
-export const API_FALLBACK_DEFAULT = "https://kubcouncil.vercel.app/api/votes";
 
 export function getRpcUrl(): string {
   return import.meta.env.VITE_RPC_URL || RPC_URL_DEFAULT;
-}
-export function getApiFallbackUrl(): string {
-  return import.meta.env.VITE_API_FALLBACK_URL || API_FALLBACK_DEFAULT;
 }
 
 export const EXPLORER_URL = kubChain.blockExplorers.default.url;
