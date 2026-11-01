@@ -119,9 +119,12 @@ export function useWalletAnalytics(model: ElectionModel | null): WalletAnalytics
     void run("unknown");
   }, [votersKey, run]);
 
-  // auto refresh ทุก ~5 นาที
+  // auto refresh ทุก ~5 นาที (ข้ามเมื่อแท็บอยู่หลังเบื้องหลัง ประหยัด quota RPC)
   useEffect(() => {
-    const iv = setInterval(() => void run("all"), AUTO_REFRESH_MS);
+    const iv = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      void run("all");
+    }, AUTO_REFRESH_MS);
     return () => clearInterval(iv);
   }, [run]);
 

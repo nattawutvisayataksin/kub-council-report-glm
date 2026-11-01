@@ -1,5 +1,7 @@
 import type { ElectionModel } from "../lib/election";
 import { weiToGkubString, fmtNum } from "../lib/format";
+import { useLang } from "../i18n";
+import { t } from "../i18n/dict";
 
 interface Props {
   model: ElectionModel;
@@ -9,35 +11,36 @@ interface Props {
 }
 
 export function SummaryStrip({ model, onExportSummary, onExportDetail, onExportWallets }: Props) {
+  useLang(); // re-render เมื่อภาษาเปลี่ยน
   const proposals = model.proposals.length;
   const quorumMet = model.proposals.filter((p) => p.quorumMet).length;
 
-  const stats: Array<{ v: string; l: string }> = [
-    { v: String(proposals), l: "ข้อเลือกตั้ง (1 ที่นั่ง/ข้อ)" },
-    { v: fmtNum(model.uniqueVoters), l: "ผู้โหวตไม่ซ้ำทั้งเทิร์น" },
-    { v: fmtNum(model.totalVoteCount), l: "ธุรกรรมโหวตบนเชน" },
-    { v: `${fmtNum(weiToGkubString(model.totalVoteWei))} gKUB`, l: "gKUB ถูกเผารวม (bonfire)" },
-    { v: `${quorumMet}/${proposals}`, l: "ผ่าน quorum (20 gKUB)" },
+  const stats: Array<{ v: string; k: string }> = [
+    { v: String(proposals), k: "sum.proposals" },
+    { v: fmtNum(model.uniqueVoters), k: "sum.voters" },
+    { v: fmtNum(model.totalVoteCount), k: "sum.tx" },
+    { v: `${fmtNum(weiToGkubString(model.totalVoteWei))} gKUB`, k: "sum.burn" },
+    { v: `${quorumMet}/${proposals}`, k: "sum.quorum" },
   ];
 
   return (
     <section className="summary">
       {stats.map((s) => (
-        <div className="stat" key={s.l}>
+        <div className="stat" key={s.k}>
           <div className="v">{s.v}</div>
-          <div className="l">{s.l}</div>
+          <div className="l">{t(s.k)}</div>
         </div>
       ))}
       <div className="exports">
         <button className="btn primary" onClick={onExportSummary}>
-          ⬇ Export: ผลสรุป (CSV)
+          {t("exp.summary")}
         </button>
         <button className="btn" onClick={onExportDetail}>
-          ⬇ Export: แหล่งธุรกรรมโหวต (CSV)
+          {t("exp.detail")}
         </button>
         {onExportWallets && (
           <button className="btn" onClick={onExportWallets}>
-            ⬇ Export: ต่อผู้โหวต (CSV)
+            {t("exp.wallets")}
           </button>
         )}
       </div>

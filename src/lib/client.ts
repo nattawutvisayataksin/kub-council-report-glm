@@ -9,7 +9,14 @@ export type KubClient = PublicClient<Transport, typeof kubChain>;
 export function makeKubClient(rpcUrl: string): KubClient {
   return createPublicClient({
     chain: kubChain,
-    transport: http(rpcUrl, { timeout: 12_000 }),
+    // batch: false — การแบตช์ทำให้หลายคำขอออกเป็นก้อนเดียว "พร้อมกัน" ชนโควตา
+    // rate limit ของ rpc.kubchain.io ได้ง่าย เราจึงคุมจังหวะเองที่ฝั่ง caller (lib/rpc.ts)
+    transport: http(rpcUrl, {
+      timeout: 14_000,
+      batch: false,
+      retryCount: 1, // viem ลองเองเบา ๆ 1 ครั้ง — retry หนักส่วนที่เหลืออยู่ที่ lib/rpc.ts
+      retryDelay: 900,
+    }),
   });
 }
 

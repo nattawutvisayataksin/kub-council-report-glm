@@ -1,6 +1,6 @@
 /**
  * Analytics ผู้โหวต — รวมข้อมูล 2 แหล่งเป็นตารางเดียว:
- *   1) ProposalVoted logs → คะแนนที่เผา (skilled: exact wei), จำนวน tx, หมวดที่ลง, ประวัติรายการ
+ *   1) ProposalVoted logs → คะแนนที่เผา (exact wei), จำนวน tx, หมวดที่ลง, ประวัติรายการ
  *   2) balanceOf ของ gKUB (อ่านสดจากเชน) → ยอดในกระเป๋า ณ ปัจจุบัน (หลังเผา/หลังเคลื่อนย้าย)
  * คลิกแถวเพื่อขยายดูประวัติโหวตทุกรายการของกระเป๋านั้น (มีลิงก์ kubscan ทุกรายการ)
  */
@@ -18,6 +18,8 @@ import {
 } from "../lib/format";
 import { explorerAddrUrl, explorerTxUrl } from "../config/chain";
 import { useNowTick } from "../hooks/useCountdown";
+import { useLang } from "../i18n";
+import { t } from "../i18n/dict";
 
 /** ชื่อหมวดย่อ สำหรับ chip ต่อกระเป๋า */
 const SHORT_CAT: Record<number, string> = {
@@ -51,6 +53,8 @@ export function WalletTable({
   tokenInfo,
   onRefreshBalances,
 }: Props) {
+  const { lang } = useLang(); // re-render เมื่อภาษาเปลี่ยน
+  void lang;
   const now = useNowTick();
   const [expanded, setExpanded] = useState<string | null>(null);
   const stats = useMemo(() => buildWalletStats(model), [model]);
@@ -122,23 +126,23 @@ export function WalletTable({
         <div>
           <div className="cat">Analytics</div>
           <h3>
-            ผู้โหวตทุกกระเป๋า — คะแนนที่เผา + ยอด gKUB ในกระเป๋า
+            {t("wt.title")}
             <span className="muted" style={{ fontSize: 12 }}>
               {" "}
-              · {stats.length} กระเป๋า (จาก ProposalVoted logs)
+              · {t("wt.walletCount", { n: stats.length })}
             </span>
           </h3>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <span className="chip">
-            ยอด gKUB: <b>{knownCount}/{stats.length}</b> อ่านสด
+            {t("wt.chipKnown", { a: knownCount, b: stats.length })}
           </span>
           <button className="btn" onClick={onRefreshBalances} disabled={balancesLoading}>
             {balancesLoading
               ? progressTotal > 0
-                ? `กำลังอ่านเชน… ${progressDone}/${progressTotal}`
-                : "กำลังอ่านเชน…"
-              : "⟲ ยอด gKUB ทุกกระเป๋า"}
+                ? t("wt.btnReading", { d: progressDone, n: progressTotal })
+                : t("wt.btnReadingPlain")
+              : t("wt.btnRead")}
           </button>
         </div>
       </div>
@@ -150,37 +154,36 @@ export function WalletTable({
         </span>
         {tokenInfo?.totalSupplyWei != null && (
           <span className="wal-chip">
-            Total supply (ปัจจุบัน):{" "}
+            {t("wt.supply")}{" "}
             <b>{fmtNum(weiToGkubString(tokenInfo.totalSupplyWei))}</b>
           </span>
         )}
         {preVoteWei != null && (
           <span className="wal-chip accent burn-summary">
-            <span className="burn-label">เผาเพื่อโหวต</span>
+            <span className="burn-label">{t("wt.burnLabel")}</span>
             <b>{fmtNum(weiToGkubString(burnedWei))}</b>
-            <small>≈ {fmtNum(burnedPctOfPre ?? 0, 4)}% ของยอดก่อนโหวต</small>
+            <small>{t("wt.burnPct", { p: fmtNum(burnedPctOfPre ?? 0, 4) })}</small>
           </span>
         )}
         {tokenInfo != null && tokenInfo.decimals !== 18 && (
-          <span className="pill warn">⚠ decimals={tokenInfo.decimals} (แอปคำนวณแบบ 18)</span>
+          <span className="pill warn">{t("wt.decimalsWarn", { d: tokenInfo.decimals })}</span>
         )}
         <span className="muted" style={{ fontSize: 11.5, marginLeft: "auto" }}>
           {agoSec != null
-            ? `อ่านยอด ณ ${fmtNum(agoSec, 0)} วินาทีก่อน · รีเฟรชอัตโนมัติทุก ~5 นาที (อ่านทยอยทีละใบ กัน RPC rate limit)`
-            : "กำลังอ่านยอดจากเชน…"}
+            ? t("wt.readAgo", { n: fmtNum(agoSec, 0) })
+            : t("wt.reading")}
         </span>
       </div>
 
       {missing.length > 0 && (
         <p className="mini-note muted">
-          ⚠ อ่าน balanceOf ได้ {knownCount}/{stats.length} กระเป๋า — กระเป๋าที่ "—" แสดงว่า RPC
-          ตอบไม่สำเร็จตอนนั้น (ไม่ได้แปลว่ายอดเป็น 0) กดปุ่มยอด gKUB เพื่อลองใหม่
+          {t("wt.missingNote", { a: knownCount, b: stats.length })}
         </p>
       )}
 
       {stats.length === 0 ? (
         <p className="muted" style={{ marginTop: 12 }}>
-          ยังไม่มีข้อมูลโหวต — ระบบจะอ่านใหม่อัตโนมัติทุก ~15 วินาที
+          {t("wt.empty")}
         </p>
       ) : (
         <div className="txf-scroll" style={{ marginTop: 12 }}>
@@ -188,11 +191,11 @@ export function WalletTable({
             <thead>
               <tr>
                 <th className="rank-col">#</th>
-                <SortTh label="กระเป๋า" k="address" sort={sort} onSort={onSort} />
-                <SortTh label="gKUB ในกระเป๋า (ปัจจุบัน)" k="balance" sort={sort} onSort={onSort} right />
-                <SortTh label="คะแนนที่เผา (gKUB)" k="burned" sort={sort} onSort={onSort} right />
+                <SortTh label={t("wt.col.wallet")} k="address" sort={sort} onSort={onSort} />
+                <SortTh label={t("wt.col.balance")} k="balance" sort={sort} onSort={onSort} right />
+                <SortTh label={t("wt.col.burned")} k="burned" sort={sort} onSort={onSort} right />
                 <SortTh label="Tx" k="txs" sort={sort} onSort={onSort} right />
-                <SortTh label="หมวดที่ลง" k="proposals" sort={sort} onSort={onSort} />
+                <SortTh label={t("wt.col.cats")} k="proposals" sort={sort} onSort={onSort} />
               </tr>
             </thead>
             <tbody>
@@ -254,25 +257,28 @@ export function WalletTable({
                           <div className="wal-detail">
                             <div className="wal-detail-sum">
                               <span>
-                                คะแนนสะสม{" "}
+                                {t("wt.exp.total")}{" "}
                                 <b>{fmtNum(weiToGkubString(w.totalWei))} gKUB</b>
                               </span>
-                              <span>· โหวต {w.txCount} ธุรกรรม</span>
+                              <span>{t("wt.exp.tx", { n: w.txCount })}</span>
                               <span>
-                                · ครั้งแรก{" "}
-                                {w.firstTs ? fmtDateTimeShort(w.firstTs) : "—"}
+                                {t("wt.exp.first", {
+                                  d: w.firstTs ? fmtDateTimeShort(w.firstTs) : "—",
+                                })}
                               </span>
                               <span>
-                                · ล่าสุด {w.lastTs ? fmtDateTimeShort(w.lastTs) : "—"}
+                                {t("wt.exp.last", {
+                                  d: w.lastTs ? fmtDateTimeShort(w.lastTs) : "—",
+                                })}
                               </span>
                             </div>
                             <table className="votes wal-detail-table">
                               <thead>
                                 <tr>
-                                  <th>เวลา (ไทย)</th>
-                                  <th>ข้อ</th>
-                                  <th>เลือก</th>
-                                  <th style={{ textAlign: "right" }}>คะแนน</th>
+                                  <th>{t("wt.col.time")}</th>
+                                  <th>{t("wt.col.item")}</th>
+                                  <th>{t("wt.col.choice")}</th>
+                                  <th style={{ textAlign: "right" }}>{t("wt.col.score")}</th>
                                   <th>Tx</th>
                                 </tr>
                               </thead>
@@ -280,7 +286,9 @@ export function WalletTable({
                                 {w.details.map((d) => (
                                   <tr key={`${d.txHash}:${d.choice}:${d.proposalId}`}>
                                     <td>
-                                      {d.ts ? fmtDateTimeShort(d.ts) : `ก้อน ${d.block}`}
+                                      {d.ts
+                                        ? fmtDateTimeShort(d.ts)
+                                        : t("chip.block", { n: d.block })}
                                     </td>
                                     <td>
                                       #{d.proposalId} · {d.category}
@@ -323,8 +331,7 @@ export function WalletTable({
       )}
 
       <p className="mini-note muted" style={{ marginTop: 10 }}>
-        ยอด "ในกระเป๋า" คือ balanceOf ของ gKUB ณ ปัจจุบัน (สดจากเชน) — คะแนนโหวตถูก burn ไปแล้ว
-        จึงไม่รวมอยู่ในยอดนี้ · ข้อจำกัด: เช็คเฉพาะกระเป๋าที่ลงโหวตเทิร์นนี้ ไม่ใช่ทุกกระเป๋าทั้งเชน
+        {t("wt.footNote")}
       </p>
     </section>
   );

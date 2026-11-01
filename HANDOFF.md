@@ -1,9 +1,37 @@
 # 📋 HANDOFF — KUB Council Report GLM (สามารถอ่านไฟล์นี้เดียวแล้วทำต่อได้)
 
-> อัปเดตล่าสุด: 2026-10-27 · สถานะ: **Version 2.0 เสร็จสมบูรณ์** — Pixel Version เป็นธีมเริ่มต้น, ปรับ motion/กราฟิกแล้ว และพร้อมพักโปรเจค
+> อัปเดตล่าสุด: 2026-11-01 · สถานะ: **v2.1 ระหว่างพัฒนา** — RPC safety overhaul + i18n TH/EN + Share/OG (worktree เดิม ยังไม่ push)
+> File ที่เกี่ยวข้อง: `src/lib/rpc.ts` (ใหม่), `src/i18n/dict.ts` + `src/i18n/index.tsx` (ใหม่), `public/og-image.png` (ใหม่)
 > URL: https://nattawutvisayataksin.github.io/kub-council-report-glm/
 
 ---
+
+## 0) v2.1 (2026-11-01) — แก้ RPC overload + i18n + OG
+
+**ปัญหา**: บนมือถือ (Chrome mobile) เปิดเว็บแล้ว error บ่อย สาเหตุคือ burst ยิง RPC พร้อมกันชน
+rate limit ("Request exceeds defined limit.") จุดเดิมที่ "ยิงรวดเดียว":
+`getBlock` timestamps (`Promise.all` หลายสิบคำขอ), getLogs 22 chunks ยิงต่อเนื่อง, view calls 6 พร้อมกัน,
+`fetchTokenInfo` 4 พร้อมกัน และโหลดครั้งแรกล้มแล้วไม่ retry
+
+**แก้**: ทุกจุดดึงเชนเปลี่ยนเป็น paced sequential + retry/backoff:
+- ใหม่ `src/lib/rpc.ts`: `withRetry` + `isThrottleError` (เจอ throttle → backoff 3 เท่า)
+- `election.ts`: getLogs chunk เว้น 140ms + retry; block timestamps อ่านทีละบล็อกเว้น 130ms;
+  5 view calls ทีละข้อเว้น 150ms — **ห้ามกลับไปใช้ Promise.all กับ RPC นี้**
+- `client.ts`: transport `batch: false`, `retryCount: 1` (viem), timeout 14s
+- `useElection.ts`: โหลดแรกล้ม → retry 3 รอบ (2.5→5→10s) ก่อนแสดง error;
+  mode unavailable → ลองเองทุก 45s; **ข้าม poll เมื่อแท็บซ่อน (`document.hidden`)**
+  และดึงทันทีตอนกลับมาที่แท็บ — ลดการเผา quota บนมือถือ
+- `useWalletAnalytics.ts`: ข้าม auto-refresh เมื่อแท็บซ่อน (sequential อยู่เหมือนเดิม)
+- `npm run verify` ผ่าน (2026-11-01: 90 tx / 28 voters / 7297.8114 gKUB — matchApi ทุกข้อ)
+
+**i18n TH/EN**: `src/i18n/dict.ts` (core ที่ lib ใช้ได้) + `src/i18n/index.tsx` (LangProvider,
+localStorage `kub-council-lang`, default ไทย) + ปุ่ม ไทย/EN ใน header (LangToggle) +
+`format.ts` locale-aware (`setFormatLang`, วันที่ th-TH vs en-GB). เพิ่มข้อความใหม่ → ใส่ key
+ทั้งสองภาษาใน dict.ts แล้วเรียก `t("key")` ห้าม hardcode ข้อความ TH ใน component ใหม่อีก
+
+**Share/OG**: `index.html` มี OG/Twitter meta ชี้ `og-image.png` (absolute URL GH Pages);
+`public/og-image.png` = hero pixel ตัดกลาง upscale 1200×630 NearestNeighbor; ปุ่ม "แชร์ผลโหวต"
+ใน Header: navigator.share (มือถือ) → คัดลอกลิงก์สำรอง พร้อม toast
 
 ## 1) โปรเจคนี้คืออะไร (ภาพรวมใน 30 วิ)
 

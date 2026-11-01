@@ -13,21 +13,25 @@ import { PixelBanner } from "./components/PixelBanner";
 import { useElection } from "./hooks/useElection";
 import { useTheme } from "./hooks/useTheme";
 import { useWalletAnalytics } from "./hooks/useWalletAnalytics";
+import { useLang } from "./i18n";
+import { t } from "./i18n/dict";
 import { exportDetailCsv, exportSummaryCsv, exportWalletCsv } from "./lib/export";
 
 function LoadingScreen({ first }: { first: boolean }) {
   return (
     <div className="loading">
       <div className="spinner" />
-      <div>{first ? "กำลังอ่านข้อมูลจากบล็อกเชน KUB Chain…" : "กำลังอัปเดตข้อมูล…"}</div>
+      <div>{first ? t("loading-first") : t("loading-refresh")}</div>
       <div className="muted" style={{ fontSize: 12 }}>
-        สแกน ProposalVoted logs + cross-check API — ใช้เวลาเพียงสักครู่
+        {t("loading-sub")}
       </div>
     </div>
   );
 }
 
 export default function App() {
+  const { lang } = useLang(); // subscribe ภาษา (nameOf fallback, LoadingScreen)
+  void lang;
   const { loading, model, refreshing, refreshNow } = useElection();
   const wa = useWalletAnalytics(model);
   const { theme, toggle } = useTheme();
@@ -38,8 +42,10 @@ export default function App() {
       (proposalId: number, choice: number): string =>
         model?.proposals
           .find((p) => p.id === proposalId)
-          ?.options.find((o) => o.idx === choice)?.name ?? `ตัวเลือก ${choice + 1}`,
-    [model],
+          ?.options.find((o) => o.idx === choice)?.name ??
+        t("pc.optionFallback", { n: choice + 1 }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [model, lang],
   );
 
   if (loading || !model)

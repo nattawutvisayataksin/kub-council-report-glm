@@ -53,6 +53,22 @@ a.chip:hover { border-color: var(--accent); text-decoration: none; }
 .chip.off .dot { background: var(--bad); box-shadow: none; }
 .chip.warn .dot { background: var(--warn); box-shadow: none; }
 
+/* ---- ปุ่มสลับภาษา (ไทย | EN) — อยู่ใน chips row ของ header ---- */
+.lang-toggle {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--line); background: var(--panel);
+  border-radius: 999px; overflow: hidden;
+}
+.lang-toggle .lg {
+  border: 0; background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 12px; padding: 4px 12px; cursor: pointer;
+  line-height: 1.4;
+}
+.lang-toggle .lg:hover { color: var(--text); }
+.lang-toggle .lg.on {
+  background: var(--accent); color: #04140c; font-weight: 500;
+}
+
 /* ---- controls ---- */
 .btn {
   border: 1px solid var(--line); background: var(--panel); color: var(--text);

@@ -1,4 +1,6 @@
 import { fmtAgoSeconds } from "../lib/format";
+import { useLang } from "../i18n";
+import { t } from "../i18n/dict";
 
 export function ApiFallbackBanner({
   apiUpdatedAt,
@@ -7,23 +9,30 @@ export function ApiFallbackBanner({
   apiUpdatedAt: string | null;
   apiFetchedAtMs: number | null;
 }) {
+  useLang(); // re-render เมื่อภาษาเปลี่ยน
   return (
     <div className="banner warn">
-      <b>⚠ โหมด API snapshot:</b> ไม่สามารถติดต่อ RPC ของ KUB Chain ได้ตอนนี้ ระบบจึงแสดงผลจาก API ของหน้า
-      kubcouncil (<a href="https://kubcouncil.vercel.app/api/votes" target="_blank" rel="noreferrer">/api/votes</a>)
-      ซึ่งมาจากแหล่งเดียวกัน — {apiUpdatedAt ? `ข้อมูล API ปรับปรุงที่ ${apiUpdatedAt}` : "ไม่มี timestamp จาก API"}
-      {apiFetchedAtMs ? ` (ดึงเมื่อ ${fmtAgoSeconds((Date.now() - apiFetchedAtMs) / 1000)})` : ""} ระบบจะพยายามกลับไปอ่าน on-chain ทุก ~15 วินาที
+      <b>{t("bn.fallbackTitle")}</b> {t("bn.fallback1")}
+      <a href="https://kubcouncil.vercel.app/api/votes" target="_blank" rel="noreferrer">
+        /api/votes
+      </a>
+      {t("bn.fallback3")}
+      {apiUpdatedAt ? t("bn.fallbackUpdated", { t: apiUpdatedAt }) : t("bn.fallbackNoTs")}
+      {apiFetchedAtMs
+        ? t("bn.fallbackFetched", { t: fmtAgoSeconds((Date.now() - apiFetchedAtMs) / 1000) })
+        : ""}
+      {t("bn.fallbackRetry")}
     </div>
   );
 }
 
 export function UnavailableBanner({ onRetry }: { onRetry: () => void }) {
+  useLang(); // re-render เมื่อภาษาเปลี่ยน
   return (
     <div className="banner bad">
-      <b>⛔ ข้อมูลไม่พร้อมแสดง:</b> ทั้ง RPC ของ KUB Chain และ API cross-check ไม่ตอบสนอง
-      ได้ข้อมูลไม่ถูกต้องพอจะแสดงจริง แสดงข้อมูลเปล่า ไม่มี mock data — ลองกดปุ่ม
+      <b>{t("bn.unavailTitle")}</b> {t("bn.unavailBody")}
       <button className="btn" style={{ marginLeft: 8 }} onClick={onRetry}>
-        ลองอีกครั้ง
+        {t("bn.retry")}
       </button>
     </div>
   );

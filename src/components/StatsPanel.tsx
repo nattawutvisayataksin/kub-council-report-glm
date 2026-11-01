@@ -14,6 +14,8 @@ import {
   type TimelinePoint,
 } from "../lib/analytics";
 import { fmtDateTimeShort, fmtNum, weiToGkubString } from "../lib/format";
+import { useLang } from "../i18n";
+import { t } from "../i18n/dict";
 
 const DONUT_COLORS = ["#2fe97a", "#ffffff", "#ffd166", "#65cfff", "#f58bb9", "#a98cff"];
 
@@ -30,9 +32,9 @@ function DistributionDonut({
   const C = 2 * Math.PI * R;
   const segs: { color: string; len: number; start: number }[] = [];
   let acc = 0;
-  totals.forEach((t, i) => {
-    if (sumWei <= 0n || t.totalWei <= 0n) return;
-    const frac = Number((t.totalWei * 1_000_000n) / sumWei) / 1_000_000;
+  totals.forEach((t2, i) => {
+    if (sumWei <= 0n || t2.totalWei <= 0n) return;
+    const frac = Number((t2.totalWei * 1_000_000n) / sumWei) / 1_000_000;
     const len = Math.max(frac * C, 0.5); // ให้ slice เล็กจิ๋วมี "ขีด" ให้เห็น
     segs.push({ color: DONUT_COLORS[i % DONUT_COLORS.length], len, start: acc });
     acc += frac * C;
@@ -41,7 +43,7 @@ function DistributionDonut({
   return (
     <div className="donut-wrap">
       <div className="donut">
-        <svg viewBox="0 0 170 170" role="img" aria-label="การกระจายคะแนนตามหมวด">
+        <svg viewBox="0 0 170 170" role="img" aria-label={t("sp.aria.donut")}>
           <circle
             cx="85"
             cy="85"
@@ -73,17 +75,17 @@ function DistributionDonut({
         </div>
       </div>
       <ul className="legend">
-        {totals.map((t, i) => (
-          <li key={t.id}>
+        {totals.map((t2, i) => (
+          <li key={t2.id}>
             <span
               className="dot"
               style={{ background: DONUT_COLORS[i % DONUT_COLORS.length] }}
             />
             <span className="nm">
-              #{t.id} {t.category}
+              #{t2.id} {t2.category}
             </span>
-            <span className="vv">{fmtNum(weiToGkubString(t.totalWei))}</span>
-            <span className="pp">{fmtNum(t.pctOfAll, 2)}%</span>
+            <span className="vv">{fmtNum(weiToGkubString(t2.totalWei))}</span>
+            <span className="pp">{fmtNum(t2.pctOfAll, 2)}%</span>
           </li>
         ))}
       </ul>
@@ -103,9 +105,7 @@ function BurnTimeline({ points }: { points: TimelinePoint[] }) {
 
   if (points.length === 0)
     return (
-      <p className="mini-note muted">
-        ยังไม่มีธุรกรรมโหวตที่มี timestamp — ระบบจะวาดกราฟเมื่อมีข้อมูลจากเชน
-      </p>
+      <p className="mini-note muted">{t("sp.tlEmpty")}</p>
     );
 
   const t0 = points[0]!.ts;
@@ -125,7 +125,7 @@ function BurnTimeline({ points }: { points: TimelinePoint[] }) {
 
   return (
     <div className="tl">
-      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="เผา gKUB สะสมตามเวลา">
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={t("sp.aria.timeline")}>
         <defs>
           <linearGradient id="burnFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgba(47, 233, 122, 0.32)" />
@@ -175,7 +175,7 @@ function BurnTimeline({ points }: { points: TimelinePoint[] }) {
         />
         {points.map((p) => (
           <circle key={`${p.ts}:${p.txIndex}`} cx={xOf(p.ts)} cy={yOf(p.cumWei)} r="2.6" fill="#b6ff7c">
-            <title>{`${fmtDateTimeShort(p.ts)} · ${fmtNum(weiToGkubString(p.cumWei))} gKUB สะสม`}</title>
+            <title>{`${fmtDateTimeShort(p.ts)} · ${fmtNum(weiToGkubString(p.cumWei))} ${t("sp.cum")}`}</title>
           </circle>
         ))}
 
@@ -189,8 +189,8 @@ function BurnTimeline({ points }: { points: TimelinePoint[] }) {
         <line x1={padL} y1={bottom} x2={W - padR} y2={bottom} stroke="rgba(143, 179, 163, 0.35)" />
       </svg>
       <div className="bar-sub">
-        <span>แต่ละจุด = ธุรกรรมโหวต 1 รายการ (hover เพื่อดูเวลา)</span>
-        <span>สะสม {points.length} tx</span>
+        <span>{t("sp.tlNote")}</span>
+        <span>{t("sp.tlCount", { n: points.length })}</span>
       </div>
     </div>
   );
@@ -199,6 +199,8 @@ function BurnTimeline({ points }: { points: TimelinePoint[] }) {
 // ---------------------------------------------------------------- panel
 
 export function StatsPanel({ model }: { model: ElectionModel }) {
+  const { lang } = useLang(); // re-render เมื่อภาษาเปลี่ยน
+  void lang;
   const { totals, sumWei } = useMemo(() => buildProposalTotals(model), [model]);
   const points = useMemo(() => buildBurnTimeline(model.votes), [model]);
 
@@ -207,24 +209,22 @@ export function StatsPanel({ model }: { model: ElectionModel }) {
       <div className="card">
         <div className="card-head">
           <div>
-            <div className="cat">สถิติ · กราฟ</div>
-            <h3>การกระจายคะแนนตามหมวด</h3>
+            <div className="cat">{t("sp.cat")}</div>
+            <h3>{t("sp.donutTitle")}</h3>
           </div>
-          {model.mode === "api-fallback" && <span className="pill warn">ค่าจาก API snapshot</span>}
+          {model.mode === "api-fallback" && <span className="pill warn">{t("sp.pillApi")}</span>}
         </div>
         <DistributionDonut totals={totals} sumWei={sumWei} />
-        <p className="mini-note muted">
-          คะแนนรวมต่อ "ข้อ" = ทุกตัวเลือกในข้อนั้นรวม abstain · หน่วย gKUB ถูกเผาตรงช่องนั้น
-        </p>
+        <p className="mini-note muted">{t("sp.donutNote")}</p>
       </div>
 
       <div className="card">
         <div className="card-head">
           <div>
-            <div className="cat">สถิติ · กราฟ</div>
-            <h3>เผา gKUB สะสมตามเวลา</h3>
+            <div className="cat">{t("sp.cat")}</div>
+            <h3>{t("sp.tlTitle")}</h3>
           </div>
-          {model.mode === "api-fallback" && <span className="pill warn">ต้องมี on-chain</span>}
+          {model.mode === "api-fallback" && <span className="pill warn">{t("sp.pillOnchain")}</span>}
         </div>
         <BurnTimeline points={points} />
       </div>

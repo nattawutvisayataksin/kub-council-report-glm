@@ -483,6 +483,26 @@ html.pixel-theme body::before {
 .header { padding-right: 300px; }
 .pixel-theme .header { padding-right: 190px; }
 
+/* ปุ่มสลับภาษา — pixel look ให้เข้ากับธีม */
+.pixel-theme .lang-toggle {
+  border: 2px solid #2fe97a;
+  background: #10251e;
+  border-radius: 0;
+  box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.32), 3px 3px 0 #07110d;
+}
+.pixel-theme .lang-toggle .lg {
+  color: #bfe8d2;
+  font-family: "Press Start 2P", "Kanit", monospace;
+  font-size: 9px;
+  padding: 5px 10px;
+  text-shadow: 1px 1px 0 #000;
+}
+.pixel-theme .lang-toggle .lg.on {
+  background: #2fe97a;
+  color: #000000;
+  text-shadow: none;
+}
+
 /* banner pixel-art ด้านบนของเวอร์ชัน Pixel — กรอบเขียวบนดำ */
 .pixel-banner {
   margin: 12px 0 4px;

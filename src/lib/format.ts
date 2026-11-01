@@ -1,4 +1,7 @@
-/** จัดรูปแบบตัวเลข/เวลา/ที่อยู่ — เวลาทั้งหมดอ้าง Asia/Bangkok (ICT) */
+/** จัดรูปแบบตัวเลข/เวลา/ที่อยู่ — เวลาทั้งหมดอ้าง Asia/Bangkok (ICT)
+ *  locale ของเวลา/ข้อความเวลา เปลี่ยนได้ผ่าน setFormatLang (มาจาก i18n provider) */
+
+import { t, type Lang } from "../i18n/dict";
 
 const GKUB_DECIMALS = 18;
 const Q = 10n ** BigInt(GKUB_DECIMALS);
@@ -49,43 +52,67 @@ export function shortAddr(addr: string): string {
   return addr.length <= 12 ? addr : `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-const bkkDate = new Intl.DateTimeFormat("th-TH", {
-  timeZone: "Asia/Bangkok",
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-const bkkTime = new Intl.DateTimeFormat("th-TH", {
-  timeZone: "Asia/Bangkok",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-const bkkShort = new Intl.DateTimeFormat("th-TH", {
-  timeZone: "Asia/Bangkok",
-  day: "2-digit",
-  month: "short",
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
-});
-
-/** "21 ต.ค. 2566 12:00 น." */
-export function fmtDateTime(tsSeconds: number): string {
-  const d = new Date(tsSeconds * 1000);
-  return `${bkkDate.format(d)} ${bkkTime.format(d)} น.`;
+let fmtLang: Lang = "th";
+export function setFormatLang(l: Lang): void {
+  fmtLang = l;
 }
 
+const DATE_LOCALE: Record<Lang, string> = { th: "th-TH", en: "en-GB" };
+
+function makeFormatters(locale: string) {
+  return {
+    date: new Intl.DateTimeFormat(locale, {
+      timeZone: "Asia/Bangkok",
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    time: new Intl.DateTimeFormat(locale, {
+      timeZone: "Asia/Bangkok",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }),
+    short: new Intl.DateTimeFormat(locale, {
+      timeZone: "Asia/Bangkok",
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }),
+  };
+}
+const fmtCache = new Map<Lang, ReturnType<typeof makeFormatters>>();
+function bkk(lang: Lang = fmtLang): ReturnType<typeof makeFormatters> {
+  let f = fmtCache.get(lang);
+  if (!f) {
+    f = makeFormatters(DATE_LOCALE[lang]);
+    fmtCache.set(lang, f);
+  }
+  return f;
+}
+
+/** วันเวลาแบบเต็ม — th: "21 ต.ค. 2566 12:00 น." / en: "21 Oct 2023, 12:00" */
+export function fmtDateTime(tsSeconds: number): string {
+  const d = new Date(tsSeconds * 1000);
+  const f = bkk();
+  const core = `${f.date.format(d)} ${f.time.format(d)}`;
+  return fmtLang === "th" ? `${core} น.` : core;
+}
+
+/** วันเวลาแบบสั้น — th: "21 ต.ค. 12:00 น." / en: "21 Oct, 12:00" */
 export function fmtDateTimeShort(tsSeconds: number): string {
   const d = new Date(tsSeconds * 1000);
-  return `${bkkShort.format(d)} น.`;
+  const core = bkk().short.format(d);
+  return fmtLang === "th" ? `${core} น.` : core;
 }
 
 export function fmtAgoSeconds(sec: number): string {
-  if (sec < 5) return "เมื่อกี้นี้";
-  if (sec < 60) return `${Math.floor(sec)} วินาทีที่แล้ว`;
-  if ( sec < 3600) return `${Math.floor(sec / 60)} นาทีที่แล้ว`;
-  return `${Math.floor(sec / 3600)} ชั่วโมงที่แล้ว`;
+  if (sec < 5) return t("ago.justnow");
+  if (sec < 60) return t("ago.sec", { n: Math.floor(sec) });
+  if (sec < 3600) return t("ago.min", { n: Math.floor(sec / 60) });
+  return t("ago.hour", { n: Math.floor(sec / 3600) });
 }
 
 export interface CountdownParts {

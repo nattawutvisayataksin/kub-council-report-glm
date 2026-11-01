@@ -32,6 +32,9 @@ import {
 import { fetchApiSnapshot, type ApiSnapshot } from "./api";
 import { makeKubClient, pickStruct, type KubClient } from "./client";
 import { compareWeiTol, gkubStringToWei } from "./format";
+import { withRetry } from "./rpc";
+import { sleep } from "./token";
+import { t } from "../i18n/dict";
 
 // ---------------------------------------------------------------- types
 
@@ -187,7 +190,10 @@ async function getLogsRaw(client: KubClient, filter: TopicFilter): Promise<RawLo
   return res;
 }
 
-/** สแกน log ตามช่วงบล็อก แบ่ง chunk แบบที่ทดสอบผ่านจริงกับ RPC นี้ */
+/** สแกน log ตามช่วงบล็อก แบ่ง chunk ตามขนาดที่ทดสอบผ่านจริงกับ RPC นี้
+ *  ⚠ แต่ละ chunk ต้องเรียงตามลำดับ + เว้นจังหวะ + retry ห้ามยิงพร้อมกัน
+ *  (rpc.kubchain.io โดน rate limit ได้ — โดยเฉพาะมือถือที่เครือข่ายช้า) */
+const LOG_PACE_MS = 140; // เว้นจังหวะระหว่าง chunk getLogs
 async function fetchLogsChunked(
   client: KubClient,
   from: number,
@@ -197,12 +203,19 @@ async function fetchLogsChunked(
   for (let b = from; b <= to; b += APP_CONFIG.VOTE_CHUNK_BLOCKS) {
     const end = Math.min(b + APP_CONFIG.VOTE_CHUNK_BLOCKS - 1, to);
     all.push(
-      ...(await getLogsRaw(client, {
-        address: PROPOSAL_CONTRACT,
-        fromBlock: `0x${b.toString(16)}`,
-        toBlock: `0x${end.toString(16)}`,
-      })),
+      ...(
+        await withRetry(
+          () =>
+            getLogsRaw(client, {
+              address: PROPOSAL_CONTRACT,
+              fromBlock: `0x${b.toString(16)}`,
+              toBlock: `0x${end.toString(16)}`,
+            }),
+          { retries: 2, baseMs: 900 },
+        )
+      ),
     );
+    if (end < to) await sleep(LOG_PACE_MS);
   }
   return all;
 }
@@ -346,20 +359,27 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   }
 
   // block timestamps สำหรับ feed
+  // ⚠ เดิมใช้ Promise.all → burst ยิง eth_getBlock พร้อมกันหลายสิบคำขอ = โดน
+  // rate limit ("Request exceeds defined limit.") เป็นสาเหตุหลักที่เปิดเว็บแล้ว error
+  // โดยเฉพาะบนมือถือ จึงเปลี่ยนเป็นอ่านทีละบล็อก เว้นจังหวะ + retry (เก็บ cache ต่อบล็อก)
   if (onchainOk) {
     const need = [...new Set([...votes, ...refunds].map((r) => r.block))].filter(
       (b) => !p.blockTsCache.has(b),
     );
-    await Promise.all(
-      need.map(async (b) => {
-        try {
-          const blk = await client.getBlock({ blockNumber: BigInt(b) });
-          p.blockTsCache.set(b, Number(blk.timestamp));
-        } catch {
-          p.blockTsCache.set(b, 0);
-        }
-      }),
-    );
+    const BLOCK_PACE_MS = 130;
+    for (let i = 0; i < need.length; i++) {
+      const b = need[i]!;
+      try {
+        const blk = await withRetry(
+          () => client.getBlock({ blockNumber: BigInt(b) }),
+          { retries: 1, baseMs: 800 },
+        );
+        p.blockTsCache.set(b, Number(blk.timestamp));
+      } catch {
+        p.blockTsCache.set(b, 0);
+      }
+      if (i < need.length - 1) await sleep(BLOCK_PACE_MS);
+    }
   }
   for (const r of votes) r.blockTs = p.blockTsCache.get(r.block) ?? null;
   for (const r of refunds) r.blockTs = p.blockTsCache.get(r.block) ?? null;
@@ -369,31 +389,40 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   let voteTokenLive: string | null = null;
   if (onchainOk) {
     try {
-      voteTokenLive = (await client.readContract({
-        address: PROPOSAL_CONTRACT,
-        abi: proposalAbi,
-        functionName: "voteToken",
-      })) as unknown as string;
+      voteTokenLive = (await withRetry(
+        () =>
+          client.readContract({
+            address: PROPOSAL_CONTRACT,
+            abi: proposalAbi,
+            functionName: "voteToken",
+          }) as unknown as Promise<string>,
+        { retries: 1, baseMs: 900 },
+      )) as unknown as string;
     } catch (e) {
       warnings.push(`readContract(voteToken) fail: ${errText(e)}`);
     }
-    await Promise.all(
-      PROPOSAL_IDS.map(async (id) => {
-        try {
-          const info = toProposalLive(
-            await client.readContract({
-              address: PROPOSAL_CONTRACT,
-              abi: proposalAbi,
-              functionName: "getProposalInfoById",
-              args: [BigInt(id)],
-            }),
-          );
-          liveInfo.set(Number(id), info);
-        } catch (e) {
-          warnings.push(`readContract(getProposalInfoById ${id}) fail: ${errText(e)}`);
-        }
-      }),
-    );
+    // ห้าม Promise.all — RPC นี้มี rate limit: อ่านทีละข้อ + เว้นจังหวะ + retry
+    const VIEW_PACE_MS = 150;
+    for (const id of PROPOSAL_IDS) {
+      try {
+        const info = toProposalLive(
+          await withRetry(
+            () =>
+              client.readContract({
+                address: PROPOSAL_CONTRACT,
+                abi: proposalAbi,
+                functionName: "getProposalInfoById",
+                args: [BigInt(id)],
+              }),
+            { retries: 1, baseMs: 900 },
+          ),
+        );
+        liveInfo.set(Number(id), info);
+      } catch (e) {
+        warnings.push(`readContract(getProposalInfoById ${id}) fail: ${errText(e)}`);
+      }
+      await sleep(VIEW_PACE_MS);
+    }
   }
 
   // ------------------------------------------------ 4) API cross-check / ชื่อผู้สมัคร
@@ -513,7 +542,7 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
     for (let idx = 0; idx < optionVotes.length; idx++) {
       const apiOpt = ap?.options.find((o) => o.idx === idx);
       const localName = VERIFIED_CANDIDATE_NAMES[id]?.[idx];
-      const name = apiOpt?.name ?? localName ?? `ตัวเลือก ${idx + 1}`;
+      const name = apiOpt?.name ?? localName ?? t("pc.optionFallback", { n: idx + 1 });
       opts.push({
         idx,
         name,

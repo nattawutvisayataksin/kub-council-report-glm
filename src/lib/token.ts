@@ -12,6 +12,7 @@
  */
 
 import type { KubClient } from "./client";
+import { withRetry } from "./rpc";
 
 export const KAP20_ABI = [
   {
@@ -116,26 +117,31 @@ export async function fetchBalanceOne(
   return null;
 }
 
-/** อ่าน metadata + totalSupply ของ token — ช่องไหน revert ให้ null (แสดง "—" ใน UI) */
+/** อ่าน metadata + totalSupply ของ token — อ่านทีละช่องเรียงลำดับ (กัน RPC rate limit)
+ * ช่องไหน revert ให้ null (แสดง "—" ใน UI) */
 export async function fetchTokenInfo(
   client: KubClient,
   token: string,
 ): Promise<TokenInfo> {
   const addr = token as `0x${string}`;
-  const [name, symbol, decimals, supply] = await Promise.all([
-    client
-      .readContract({ address: addr, abi: KAP20_ABI, functionName: "name" })
-      .catch(() => null),
-    client
-      .readContract({ address: addr, abi: KAP20_ABI, functionName: "symbol" })
-      .catch(() => null),
-    client
-      .readContract({ address: addr, abi: KAP20_ABI, functionName: "decimals" })
-      .catch(() => null),
-    client
-      .readContract({ address: addr, abi: KAP20_ABI, functionName: "totalSupply" })
-      .catch(() => null),
-  ]);
+  const call = async (
+    fn: "name" | "symbol" | "decimals" | "totalSupply",
+  ): Promise<unknown> => {
+    try {
+      return await withRetry(
+        () => client.readContract({ address: addr, abi: KAP20_ABI, functionName: fn }),
+        { retries: 1, baseMs: 800 },
+      );
+    } catch {
+      return null;
+    } finally {
+      await sleep(150); // เว้นจังหวะทุก call — rpc.kubchain.io มี rate limit
+    }
+  };
+  const name = await call("name");
+  const symbol = await call("symbol");
+  const decimals = await call("decimals");
+  const supply = await call("totalSupply");
   return {
     name: name == null ? null : String(name),
     symbol: symbol == null ? null : String(symbol),

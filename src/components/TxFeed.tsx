@@ -4,6 +4,8 @@ import { APP_CONFIG } from "../config/election";
 import type { RefundRow, VoteRow } from "../lib/election";
 import { SortTh, nextSort, cmpBig, type SortState } from "./SortTh";
 import { fmtDateTimeShort, fmtNum, shortAddr, weiToGkubString } from "../lib/format";
+import { useLang } from "../i18n";
+import { t } from "../i18n/dict";
 
 const catById: Record<number, string> = {
   19: "Builder & Developer",
@@ -15,12 +17,12 @@ const catById: Record<number, string> = {
 
 type SortKey = "time" | "proposal" | "choice" | "voter" | "amount";
 
-const SORT_LABEL: Record<SortKey, string> = {
-  time: "เวลา",
-  proposal: "ข้อ",
-  choice: "ผู้สมัครที่เลือก",
-  voter: "ผู้โหวต",
-  amount: "คะแนน",
+const SORT_LABEL_KEY: Record<SortKey, string> = {
+  time: "k.time",
+  proposal: "k.item",
+  choice: "k.choice",
+  voter: "k.voter",
+  amount: "k.amount",
 };
 
 interface Props {
@@ -32,6 +34,8 @@ interface Props {
 }
 
 export function TxFeed({ votes, refunds, nameOf, total }: Props) {
+  const { lang } = useLang(); // re-render เมื่อภาษาเปลี่ยน (คำเรียง/หัวตาราง)
+  void lang;
   const [showAll, setShowAll] = useState(false);
   const [sort, setSort] = useState<SortState>({ key: "time", dir: "desc" });
 
@@ -71,27 +75,31 @@ export function TxFeed({ votes, refunds, nameOf, total }: Props) {
   };
 
   const sortHint = showAll
-    ? `เรียงตาม ${SORT_LABEL[sort.key as SortKey]} (${sort.dir === "desc" ? "มาก→น้อย" : "น้อย→มาก"}) · คลิกหัวตารางเพื่อเปลี่ยน`
-    : `ล่าสุด ${visible.length} จาก ${total} รายการ · คลิกหัวตารางเพื่อเรียง`;
+    ? t("tf.sortHintAll", {
+        k: t(SORT_LABEL_KEY[sort.key as SortKey]),
+        dir: t(sort.dir === "desc" ? "tf.dir.desc" : "tf.dir.asc"),
+      })
+    : t("tf.sortHintLatest", { n: visible.length, total });
 
   return (
     <section className="card">
       <div className="card-head">
         <div>
-          <div className="cat">ธุรกรรม</div>
+          <div className="cat">{t("tf.cat")}</div>
           <h3>
-            รายการโหวตจากบล็อกเชน <span className="muted" style={{ fontSize: 12 }}>· {sortHint}</span>
+            {t("tf.title")}{" "}
+            <span className="muted" style={{ fontSize: 12 }}>· {sortHint}</span>
           </h3>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <span className="chip">ทั้งหมด <b>{total}</b> รายการ</span>
+          <span className="chip">{t("tf.all", { n: total })}</span>
           {showAll ? (
             <button className="btn" onClick={collapse}>
-              ⤡ แสดงเฉพาะ {APP_CONFIG.TX_FEED_LIMIT} ล่าสุด
+              {t("tf.showLatest", { n: APP_CONFIG.TX_FEED_LIMIT })}
             </button>
           ) : (
             <button className="btn" onClick={() => setShowAll(true)}>
-              ⤢ แสดงธุรกรรมทั้งหมด ({total})
+              {t("tf.showAll", { n: total })}
             </button>
           )}
         </div>
@@ -99,7 +107,7 @@ export function TxFeed({ votes, refunds, nameOf, total }: Props) {
 
       {visible.length === 0 ? (
         <p className="muted" style={{ marginTop: 12 }}>
-          ยังไม่พบรายการโหวตใหม่ — ระบบจะเช็คอัตโนมัติจากเชนทุก ~15 วินาที
+          {t("tf.empty")}
         </p>
       ) : (
         <div
@@ -109,18 +117,22 @@ export function TxFeed({ votes, refunds, nameOf, total }: Props) {
           <table className="votes">
             <thead>
               <tr>
-                <SortTh label="เวลา (ไทย)" k="time" sort={sort} onSort={onSort} />
-                <SortTh label="ข้อเลือกตั้ง" k="proposal" sort={sort} onSort={onSort} />
-                <SortTh label="ผู้สมัครที่เลือก" k="choice" sort={sort} onSort={onSort} />
-                <SortTh label="ผู้โหวต" k="voter" sort={sort} onSort={onSort} />
-                <SortTh label="คะแนน (gKUB)" k="amount" sort={sort} onSort={onSort} right />
+                <SortTh label={t("tf.col.time")} k="time" sort={sort} onSort={onSort} />
+                <SortTh label={t("tf.col.item")} k="proposal" sort={sort} onSort={onSort} />
+                <SortTh label={t("tf.col.choice")} k="choice" sort={sort} onSort={onSort} />
+                <SortTh label={t("tf.col.voter")} k="voter" sort={sort} onSort={onSort} />
+                <SortTh label={t("tf.col.amount")} k="amount" sort={sort} onSort={onSort} right />
                 <th>Tx</th>
               </tr>
             </thead>
             <tbody>
               {visible.map((v) => (
                 <tr key={v.key}>
-                  <td>{v.blockTs ? fmtDateTimeShort(v.blockTs) : `ก้อน ${v.block}`}</td>
+                  <td>
+                    {v.blockTs
+                      ? fmtDateTimeShort(v.blockTs)
+                      : t("chip.block", { n: v.block })}
+                  </td>
                   <td>
                     #{v.proposalId} · {catById[v.proposalId] ?? "—"}
                   </td>
@@ -150,18 +162,23 @@ export function TxFeed({ votes, refunds, nameOf, total }: Props) {
       {refunds.length > 0 && (
         <div style={{ marginTop: 12 }} className="muted">
           <div style={{ fontSize: 12.5, marginBottom: 6 }}>
-            การคืน gKUB (VoteTokenWithdrawn) {refunds.length} รายการ — หมายเหตุ: ซอร์สโค้ดยืนยันว่าการ withdraw
-            <b> ไม่ลด</b> choiceVoted/totalVoted บนเชน (คะแนนที่ "เผา" ไปแล้วยังนับตามเดิม)
+            {t("tf.refundHead", { n: refunds.length })} <b>{t("tf.refundNote")}</b>
           </div>
           <div className="txf-scroll">
             <table className="votes">
               <tbody>
                 {refunds.slice(0, 10).map((r) => (
                   <tr key={r.key}>
-                    <td>{r.blockTs ? fmtDateTimeShort(r.blockTs) : `ก้อน ${r.block}`}</td>
+                    <td>
+                      {r.blockTs
+                        ? fmtDateTimeShort(r.blockTs)
+                        : t("chip.block", { n: r.block })}
+                    </td>
                     <td>#{r.proposalId}</td>
                     <td className="mono">{shortAddr(r.voter)}</td>
-                    <td style={{ textAlign: "right" }}>{fmtNum(weiToGkubString(r.amountWei))} gKUB</td>
+                    <td style={{ textAlign: "right" }}>
+                      {fmtNum(weiToGkubString(r.amountWei))} gKUB
+                    </td>
                     <td>
                       <a className="mono" href={explorerTxUrl(r.txHash)} target="_blank" rel="noreferrer">
                         ↗
