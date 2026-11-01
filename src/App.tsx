@@ -25,6 +25,9 @@ function LoadingScreen({ first }: { first: boolean }) {
       <div className="muted" style={{ fontSize: 12 }}>
         {t("loading-sub")}
       </div>
+      <div className="muted" style={{ fontSize: 12, maxWidth: 340, textAlign: "center" }}>
+        {t("loading-firstvisit")}
+      </div>
     </div>
   );
 }

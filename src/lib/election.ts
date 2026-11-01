@@ -191,33 +191,43 @@ async function getLogsRaw(client: KubClient, filter: TopicFilter): Promise<RawLo
 }
 
 /** สแกน log ตามช่วงบล็อก แบ่ง chunk ตามขนาดที่ทดสอบผ่านจริงกับ RPC นี้
- *  ⚠ แต่ละ chunk ต้องเรียงตามลำดับ + เว้นจังหวะ + retry ห้ามยิงพร้อมกัน
- *  (rpc.kubchain.io โดน rate limit ได้ — โดยเฉพาะมือถือที่เครือข่ายช้า) */
-const LOG_PACE_MS = 140; // เว้นจังหวะระหว่าง chunk getLogs
+ *  ⚠ กัน rate limit: จำกัด 2 chunks ขนาน + เว้นจังหวะ + retry ต่อ chunk
+ *  (ทดสอบจริง: ขนาน 6 พร้อมกันโดน throttle, 2 ทำงานได้เสถียร + เร็วกว่า sequential เดียว) */
+const LOG_PACE_MS = 140; // เว้นจังหวะหลังแต่ละ chunk
+const LOG_CONCURRENCY = 2;
 async function fetchLogsChunked(
   client: KubClient,
   from: number,
   to: number,
 ): Promise<RawLog[]> {
-  const all: RawLog[] = [];
+  const bounds: Array<[number, number]> = [];
   for (let b = from; b <= to; b += APP_CONFIG.VOTE_CHUNK_BLOCKS) {
     const end = Math.min(b + APP_CONFIG.VOTE_CHUNK_BLOCKS - 1, to);
-    all.push(
-      ...(
-        await withRetry(
-          () =>
-            getLogsRaw(client, {
-              address: PROPOSAL_CONTRACT,
-              fromBlock: `0x${b.toString(16)}`,
-              toBlock: `0x${end.toString(16)}`,
-            }),
-          { retries: 2, baseMs: 900 },
-        )
-      ),
-    );
-    if (end < to) await sleep(LOG_PACE_MS);
+    bounds.push([b, end]);
   }
-  return all;
+  const results: Array<RawLog[] | undefined> = new Array(bounds.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    while (next < bounds.length) {
+      const i = next++;
+      const [b, end] = bounds[i]!;
+      results[i] = await withRetry(
+        () =>
+          getLogsRaw(client, {
+            address: PROPOSAL_CONTRACT,
+            fromBlock: `0x${b.toString(16)}`,
+            toBlock: `0x${end.toString(16)}`,
+          }),
+        { retries: 2, baseMs: 900 },
+      );
+      await sleep(LOG_PACE_MS);
+    }
+  };
+  const workers: Promise<void>[] = [];
+  const workerCount = Math.min(LOG_CONCURRENCY, bounds.length);
+  for (let k = 0; k < workerCount; k++) workers.push(worker());
+  await Promise.all(workers);
+  return results.flat() as Array<RawLog>;
 }
 
 /** normalize struct จาก getProposalInfoById — viem คืนได้ทั้ง array และ object ชื่อ field */
@@ -359,16 +369,23 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
   }
 
   // block timestamps สำหรับ feed
-  // ⚠ เดิมใช้ Promise.all → burst ยิง eth_getBlock พร้อมกันหลายสิบคำขอ = โดน
-  // rate limit ("Request exceeds defined limit.") เป็นสาเหตุหลักที่เปิดเว็บแล้ว error
-  // โดยเฉพาะบนมือถือ จึงเปลี่ยนเป็นอ่านทีละบล็อก เว้นจังหวะ + retry (เก็บ cache ต่อบล็อก)
+  // ⚠ ห้าม Promise.all (โดน rate limit) — อ่านทีละบล็อกเว้นจังหวะ + retry
+  // และจำกัดจำนวนต่อรอบ: ช่วงโหวตยาวมีบล็อกใหม่ได้หลายสิบอัน โหลดแรกจึงไม่เสียเวลา
+  // กับบล็อกเก่าทั้งหมด (feed/กราฟแสดง "ก้อน N" ชั่วคราว แล้วเติม ts ค่อย ๆ)
+  // blockTsCache ถูก persist ใน localStorage → เปิดครั้งถัดไปไม่ต้องยิงซ้ำ
   if (onchainOk) {
-    const need = [...new Set([...votes, ...refunds].map((r) => r.block))].filter(
-      (b) => !p.blockTsCache.has(b),
-    );
+    const MAX_TS_FETCH = 24; // รอบแรกดึงแค่ 24 บล็อกล่าสุด ที่เหลือค่อย ๆ ทยอยใน poll ถัดไป
+    const need = [...new Set([...votes, ...refunds].map((r) => r.block))]
+      .filter((b) => {
+        const cached = p.blockTsCache.get(b);
+        return !(cached != null && cached > 0); // cache = 0 คือเคยล้ม → ลองใหม่ได้
+      })
+      .sort((a, b) => a - b);
+    const limited =
+      need.length > MAX_TS_FETCH ? need.slice(need.length - MAX_TS_FETCH) : need;
     const BLOCK_PACE_MS = 130;
-    for (let i = 0; i < need.length; i++) {
-      const b = need[i]!;
+    for (let i = 0; i < limited.length; i++) {
+      const b = limited[i]!;
       try {
         const blk = await withRetry(
           () => client.getBlock({ blockNumber: BigInt(b) }),
@@ -378,7 +395,7 @@ export async function fetchElectionModel(p: FetchParams): Promise<FetchResult> {
       } catch {
         p.blockTsCache.set(b, 0);
       }
-      if (i < need.length - 1) await sleep(BLOCK_PACE_MS);
+      if (i < limited.length - 1) await sleep(BLOCK_PACE_MS);
     }
   }
   for (const r of votes) r.blockTs = p.blockTsCache.get(r.block) ?? null;

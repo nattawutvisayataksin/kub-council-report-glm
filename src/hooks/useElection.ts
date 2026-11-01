@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getApiFallbackUrl, getRpcUrl } from "../config/chain";
 import { APP_CONFIG, SCAN_START_BLOCK } from "../config/election";
 import {
@@ -7,6 +7,7 @@ import {
   type RefundRow,
   type VoteRow,
 } from "../lib/election";
+import { loadElectionSnapshot, saveElectionSnapshot } from "../lib/store";
 
 /** โหลดครั้งแรกล้ม → ลองใหม่หลายรอบก่อนแสดง error (มือถือ/เครือข่ายช้าเจอ throttle ง่ายกว่า PC) */
 const BOOT_RETRY_MAX = 3;
@@ -50,11 +51,15 @@ export function useElection(): ElectionState & { refreshNow: () => void } {
     lastUpdatedMs: null,
   });
 
+  // hydrate จาก localStorage (ถ้ามี): สแกนไม่ต้องเริ่มรอบบนสุด และ blockTs ไม่ต้องยิงใหม่
+  // นี่เป็นแค่ "ผลอ่านครั้งก่อน" — รอบนี้ยังสแกน block ใหม่ + อ่าน view ล่าสุด + cross-check API ตามปกติ
+  const bootCache = useMemo(() => loadElectionSnapshot(), []);
+
   const ref = useRef({
-    scannedTo: SCAN_START_BLOCK,
-    votes: [] as VoteRow[],
-    refunds: [] as RefundRow[],
-    blockTsCache: new Map<number, number>(),
+    scannedTo: bootCache?.scannedTo ?? SCAN_START_BLOCK,
+    votes: bootCache?.votes ?? ([] as VoteRow[]),
+    refunds: bootCache?.refunds ?? ([] as RefundRow[]),
+    blockTsCache: bootCache?.blockTsCache ?? new Map<number, number>(),
     inflight: false,
     bootFails: 0,
   });
@@ -83,6 +88,13 @@ export function useElection(): ElectionState & { refreshNow: () => void } {
       ref.current.votes = model.votes;
       ref.current.refunds = model.refunds;
       ref.current.bootFails = 0;
+      saveElectionSnapshot({
+        savedAtMs: model.fetchedAtMs,
+        scannedTo: ref.current.scannedTo,
+        votes: ref.current.votes,
+        refunds: ref.current.refunds,
+        blockTsCache: ref.current.blockTsCache,
+      });
       setState({
         loading: false,
         refreshing: false,

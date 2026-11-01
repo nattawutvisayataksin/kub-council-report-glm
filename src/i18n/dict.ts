@@ -28,6 +28,8 @@ const th: Dict = {
   "loading-first": "กำลังอ่านข้อมูลจากบล็อกเชน KUB Chain…",
   "loading-refresh": "กำลังอัปเดตข้อมูล…",
   "loading-sub": "สแกน ProposalVoted logs + cross-check API — ใช้เวลาเพียงสักครู่",
+  "loading-firstvisit":
+    "ครั้งแรกต้องสแกนบล็อกทั้งช่วงเลือกตั้ง (มือถือ/เครือข่ายช้าอาจใช้เวลา 1–2 นาที) — ครั้งถัดไปจะเร็วขึ้นมาก เพราะเก็บผลอ่านล่าสุดไว้ในเครื่องนี้แล้ว",
 
   // ---- Header ----
   "header.subtitle":
@@ -197,6 +199,8 @@ const en: Dict = {
   "loading-refresh": "Updating data…",
   "loading-sub":
     "Scanning ProposalVoted logs + cross-checking the API — this takes a moment",
+  "loading-firstvisit":
+    "First visit scans the whole election's block history (may take 1–2 minutes on slow networks). Next visits are much faster — the latest scan result is cached on this device.",
 
   // ---- Header ----
   "header.subtitle":
