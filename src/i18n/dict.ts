@@ -116,8 +116,7 @@ const th: Dict = {
   "tf.showLatest": "⤡ แสดงเฉพาะ {n} ล่าสุด",
   "tf.showAll": "⤢ แสดงธุรกรรมทั้งหมด ({n})",
   "tf.all": "ทั้งหมด {n} รายการ",
-  "tf.empty":
-    "ยังไม่พบรายการโหวตใหม่ — ระบบจะเช็คอัตโนมัติจากเชนทุก ~15 วินาที",
+  "tf.empty": "ยังไม่พบรายการโหวตใหม่ — กดปุ่ม \"อัปเดตตอนนี้\" ด้านบนเพื่อเช็คใหม่",
   "tf.col.time": "เวลา (ไทย)",
   "tf.col.item": "ข้อเลือกตั้ง",
   "tf.col.choice": "ผู้สมัครที่เลือก",
@@ -146,11 +145,11 @@ const th: Dict = {
   "wt.burnPct": "≈ {p}% ของยอดก่อนโหวต",
   "wt.decimalsWarn": "⚠ decimals={d} (แอปคำนวณแบบ 18)",
   "wt.readAgo":
-    "อ่านยอด ณ {n} วินาทีก่อน · รีเฟรชอัตโนมัติทุก ~5 นาที (อ่านทยอยทีละใบ กัน RPC rate limit)",
+    "อ่านยอด ณ {n} วินาทีก่อน · อ่านใหม่ได้เองเมื่อไหร่ก็ได้ (อ่านทยอยทีละใบ กัน RPC rate limit)",
   "wt.reading": "กำลังอ่านยอดจากเชน…",
   "wt.missingNote":
     "⚠ อ่าน balanceOf ได้ {a}/{b} กระเป๋า — กระเป๋าที่ \"—\" แสดงว่า RPC ตอบไม่สำเร็จตอนนั้น (ไม่ได้แปลว่ายอดเป็น 0) กดปุ่มยอด gKUB เพื่อลองใหม่",
-  "wt.empty": "ยังไม่มีข้อมูลโหวต — ระบบจะอ่านใหม่อัตโนมัติทุก ~15 วินาที",
+  "wt.empty": "ยังไม่มีข้อมูลโหวต — กดปุ่ม \"อัปเดตตอนนี้\" ด้านบนเพื่อเช็คใหม่",
   "wt.col.wallet": "กระเป๋า",
   "wt.col.balance": "gKUB ในกระเป๋า (ปัจจุบัน)",
   "wt.col.burned": "คะแนนที่เผา (gKUB)",
@@ -173,7 +172,7 @@ const th: Dict = {
   "bn.fallbackUpdated": "ข้อมูล API ปรับปรุงที่ {t}",
   "bn.fallbackNoTs": "ไม่มี timestamp จาก API",
   "bn.fallbackFetched": " (ดึงเมื่อ {t})",
-  "bn.fallbackRetry": " ระบบจะพยายามกลับไปอ่าน on-chain ทุก ~15 วินาที",
+  "bn.fallbackRetry": " สรุปข้อมูลเฉพาะตอนเปิดหน้า — กดปุ่ม \"อัปเดตตอนนี้\" เพื่อลองอ่าน on-chain ใหม่",
   "bn.unavailTitle": "⛔ ข้อมูลไม่พร้อมแสดง:",
   "bn.unavailBody":
     "ทั้ง RPC ของ KUB Chain และ API cross-check ไม่ตอบสนอง ได้ข้อมูลไม่ถูกต้องพอจะแสดงจริง แสดงข้อมูลเปล่า ไม่มี mock data — ระบบลองใหม่เองทุก 45 วินาที หรือกดปุ่ม",
@@ -288,7 +287,7 @@ const en: Dict = {
   "tf.showAll": "⤢ Show all transactions ({n})",
   "tf.all": "{n} total",
   "tf.empty":
-    "No new votes yet — the system checks the chain automatically every ~15 seconds",
+    "No new votes yet — press \"Refresh now\" above to check again",
   "tf.col.time": "Time (BKK)",
   "tf.col.item": "Item",
   "tf.col.choice": "Choice",
@@ -319,11 +318,11 @@ const en: Dict = {
   "wt.burnPct": "≈ {p}% of pre-vote supply",
   "wt.decimalsWarn": "⚠ decimals={d} (app assumes 18)",
   "wt.readAgo":
-    "Read {n}s ago · auto-refreshes every ~5 min (sequential reads to avoid RPC rate limits)",
+    "Read {n}s ago · re-read anytime with the button (sequential reads to avoid RPC rate limits)",
   "wt.reading": "Reading balances from the chain…",
   "wt.missingNote":
     "⚠ Read balanceOf for {a}/{b} wallets — \"—\" means the RPC did not respond at that time (it does NOT mean zero); press the gKUB button to retry",
-  "wt.empty": "No vote data yet — the system re-reads automatically every ~15 seconds",
+  "wt.empty": "No vote data yet — press \"Refresh now\" above to check again",
   "wt.col.wallet": "Wallet",
   "wt.col.balance": "gKUB balance (current)",
   "wt.col.burned": "Burned votes (gKUB)",
@@ -348,7 +347,7 @@ const en: Dict = {
   "bn.fallbackNoTs": "no timestamp from API",
   "bn.fallbackFetched": " (fetched {t})",
   "bn.fallbackRetry":
-    " The system keeps retrying on-chain every ~15 seconds",
+    " Results are fetched on page load — press \"Refresh now\" to try on-chain again",
   "bn.unavailTitle": "⛔ Data unavailable:",
   "bn.unavailBody":
     "Both the KUB Chain RPC and the cross-check API are not responding. Nothing reliable to show — no mock data. It retries automatically every 45 seconds, or press",

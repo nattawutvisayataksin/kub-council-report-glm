@@ -3,8 +3,8 @@
  * - อ่านแบบ "sequential ทยอยทีละใบ เว้น ~400ms" เพราะ rpc.kubchain.io มี rate limit
  *   (ทดสอบจริง: sequential = 22/22 ครบ, burst 6 ชุด = เหลือ 6/22)
  * -ปรับ progress ระหว่างอ่าน — ตารางเติมยอดเรียงไปทีละแถว
- * - ปุ่ม manual `refreshBalances()` รีอ่านทุกกระเป๋าสดจากเชน
- * - auto refresh ทุก ~5 นาที
+ * - ปุ่ม manual `refreshBalances()` รีอ่านทุกกระเป๋าสดจากเชน (ไม่มี auto refresh)
+ * - อ่านอัตโนมัติเฉพาะ "กระเป๋าที่ยังไม่รู้ยอด" ครั้งแรกตอนมีข้อมูลโหวตเข้ามา
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -28,7 +28,6 @@ export interface WalletAnalyticsState {
   refreshBalances: () => void;
 }
 
-const AUTO_REFRESH_MS = 300_000; // ~5 นาที
 const BAL_DELAY_MS = 420; // เว้นระยะระหว่างแต่ละ balanceOf (กัน rate limit)
 const BAL_RETRIES = 2;
 
@@ -113,20 +112,12 @@ export function useWalletAnalytics(model: ElectionModel | null): WalletAnalytics
     [rpcUrl],
   );
 
-  // ครั้งแรก + ตอนมีกระเป๋าใหม่เข้ามา
+  // ครั้งแรก + ตอนมีกระเป๋าใหม่เข้ามา (อ่านเฉพาะใบที่ยังไม่รู้ยอด — โหมด "unknown")
+  // ไม่มี auto refresh — ผู้ใช้กดปุ่ม "ยอด gKUB ทุกกระเป๋า" เองเมื่อต้องการอ่านซ้ำ
   useEffect(() => {
     if (!votersKey) return;
     void run("unknown");
   }, [votersKey, run]);
-
-  // auto refresh ทุก ~5 นาที (ข้ามเมื่อแท็บอยู่หลังเบื้องหลัง ประหยัด quota RPC)
-  useEffect(() => {
-    const iv = setInterval(() => {
-      if (typeof document !== "undefined" && document.hidden) return;
-      void run("all");
-    }, AUTO_REFRESH_MS);
-    return () => clearInterval(iv);
-  }, [run]);
 
   const refreshBalances = useCallback(() => void run("all"), [run]);
 

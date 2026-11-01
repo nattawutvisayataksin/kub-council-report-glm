@@ -50,7 +50,6 @@ export const DISPLAY_ORDER: ProposalId[] = [19, 18, 17, 16, 15];
 
 export const APP_CONFIG = {
   VOTE_CHUNK_BLOCKS: 4000, // ขนาด chunk ที่ปลอดภัยกับ rpc.kubchain.io (ทดสอบแล้ว)
-  REFRESH_MS: 15000, // อัปเดตอัตโนมัติ ~15 วินาที
   API_TIMEOUT_MS: 8000,
   TX_FEED_LIMIT: 25,
 } as const;

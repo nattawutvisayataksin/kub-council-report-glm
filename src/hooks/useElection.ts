@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getApiFallbackUrl, getRpcUrl } from "../config/chain";
-import { APP_CONFIG, SCAN_START_BLOCK } from "../config/election";
+import { SCAN_START_BLOCK } from "../config/election";
 import {
   fetchElectionModel,
   type ElectionModel,
@@ -39,17 +39,25 @@ const EMPTY_MODEL: ElectionModel = {
   warnings: [],
 };
 
-/** polling ทุก ~15 วินาที: ครั้งแรกสแกนตั้งแต่ SCAN_START_BLOCK, รอบถัดไปแบบ incremental */
+/** อ่านข้อมูลเฉพาะตอนเปิดหน้าครั้งแรก (จาก cache เครื่อง ถ้ามี) — รอบต่อไปผู้ใช้กด "อัปเดตตอนนี้" เอง */
 export function useElection(): ElectionState & { refreshNow: () => void } {
   const rpcUrl = getRpcUrl();
   const apiFallbackUrl = getApiFallbackUrl();
 
-  const [state, setState] = useState<ElectionState>({
+  const [state, setStateRaw] = useState<ElectionState>({
     loading: true,
     refreshing: false,
     model: null,
     lastUpdatedMs: null,
   });
+  // mirror ของ state สำหรับ interval ที่สร้างครั้งเดียว (อ่านค่าล่าสุดได้เสมอ)
+  const stateRef = useRef<ElectionState | null>(null);
+  const setState: typeof setStateRaw = (updater) =>
+    setStateRaw((s) => {
+      const next = typeof updater === "function" ? updater(s) : updater;
+      stateRef.current = next;
+      return next;
+    });
 
   // hydrate จาก localStorage (ถ้ามี): สแกนไม่ต้องเริ่มรอบบนสุด และ blockTs ไม่ต้องยิงใหม่
   // นี่เป็นแค่ "ผลอ่านครั้งก่อน" — รอบนี้ยังสแกน block ใหม่ + อ่าน view ล่าสุด + cross-check API ตามปกติ
@@ -130,26 +138,18 @@ export function useElection(): ElectionState & { refreshNow: () => void } {
   }, [rpcUrl, apiFallbackUrl]);
 
   useEffect(() => {
+    // อ่านเชนเฉพาะตอนเปิดหน้าครั้งแรก — ไม่มี auto refresh
+    // จากนั้นผู้ใช้กดปุ่ม "อัปเดตตอนนี้" เอง (refreshNow) เมื่อไหร่ก็ได้
+    // ข้อยกเว้น: เมื่อยังไม่มีข้อมูลแม้แต่ค่าเดียว (mode unavailable) ให้ลองเอง
+    // ทุก 45 วิ เพื่อไม่ให้รายงานว่างไปเปล่าเมื่อเจอ RPC rate limit ตอนเปิดครั้งแรก
+    stateRef.current = state;
     void run();
-    const iv = setInterval(() => void run(), APP_CONFIG.REFRESH_MS);
-    // กลับมาที่แท็บ → ดึงล่าสุดทันที (เพราะรอบที่แท็บซ่อนถูกข้าม)
-    const onVisible = (): void => {
-      if (!document.hidden) void run();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      clearInterval(iv);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [run]);
-
-  // mode unavailable (RPC+API ไม่ตอบ) → ลองใหม่เองทุก 45 วิ ไม่ต้องรอผู้ใช้กด
-  const unavailable = state.model?.mode === "unavailable";
-  useEffect(() => {
-    if (!unavailable) return;
-    const iv = setInterval(() => void run(), UNAVAILABLE_RETRY_MS);
+    const iv = setInterval(() => {
+      const m = stateRef.current?.model;
+      if (!m || m.mode === "unavailable") void run();
+    }, UNAVAILABLE_RETRY_MS);
     return () => clearInterval(iv);
-  }, [unavailable, run]);
+  }, []);
 
   return { ...state, refreshNow: run };
 }
